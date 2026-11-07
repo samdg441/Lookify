@@ -1,8 +1,8 @@
 # Virtual Closet — Mobile
 
-> Your closet, curated. — Flutter + Supabase virtual wardrobe app.
+> Your closet, curated. — Flutter + Firebase virtual wardrobe app.
 
-For environment setup (`.env`, Supabase migrations, fonts) and the full project structure, see [SETUP.md](SETUP.md).
+For environment setup (`.env`, Firebase, fonts) and the project structure, see [SETUP.md](SETUP.md).
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ flutter --version   # requires 3.19+
 flutter pub get
 ```
 
-Make sure `.env` has valid `SUPABASE_URL` / `SUPABASE_ANON_KEY` values before building — see [SETUP.md](SETUP.md#2-configure-environment).
+Make sure `.env` has `AI_API_KEY` and `AI_MODEL` before using outfit suggestions. Firebase options for Android and web already live in `lib/firebase_options.dart`. Those are the configured platforms.
 
 ## Running in development
 

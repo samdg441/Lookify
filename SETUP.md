@@ -1,6 +1,6 @@
 # Virtual Closet — Mobile App
 
-> Your closet, curated. — Flutter + Supabase
+> Your closet, curated. — Flutter + Firebase
 
 ## Stack
 
@@ -9,7 +9,8 @@
 | Framework | Flutter 3.x (Dart) |
 | State Management | Riverpod |
 | Navigation | GoRouter |
-| Backend | Supabase (Auth + DB + Storage) |
+| Backend | Firebase Auth, Cloud Firestore, and Storage, behind ports |
+| Crash reports | Firebase Crashlytics on mobile, no-op elsewhere |
 | AI Suggestions | Anthropic Messages API (model set via `AI_MODEL`) |
 | Background Removal | ML Kit Subject Segmentation, on-device (Android only) |
 | Charts | fl_chart |
@@ -20,7 +21,7 @@
 | Screen | Description |
 |--------|-------------|
 | Splash | Logo animation → Auth check |
-| Login / Register | Supabase email/password auth |
+| Login / Register | Firebase email/password auth |
 | My Closet | Grid of garments, filter by category |
 | Add Garment | Photo + metadata form, optional on-device background removal (Android, on by default) |
 | Garment Detail | Stats, wear tracking, delete |
@@ -42,30 +43,28 @@ flutter --version  # requires 3.19+
 
 ### 2. Configure environment
 
-Copy and fill in your keys:
-
-```bash
-cp .env .env.local
-```
+Create `.env` in the project root. The app loads it at startup, and outfit suggestions need both keys:
 
 ```dotenv
-SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-SUPABASE_ANON_KEY=eyJ...
 AI_API_KEY=sk-ant-...
 AI_MODEL=<model-id>
 ```
 
-### 3. Set up Supabase
+### 3. Firebase
 
-1. Create a project at https://supabase.com
-2. Go to **SQL Editor** and run the migrations in order:
-   ```
-   supabase/migrations/001_initial_schema.sql
-   supabase/migrations/002_garment_images.sql
-   supabase/migrations/003_garment_currency.sql
-   ```
-3. In **Storage**, verify 3 buckets were created: `garments`, `outfits`, `avatars`
-4. Copy your Project URL and anon key into `.env`
+The Android and web apps are already registered on the Firebase project `lookify-closet`. `lib/firebase_options.dart` and `android/app/google-services.json` point at that project.
+
+1. In Firebase Console, enable Email/Password under Authentication.
+2. Deploy `firestore.rules`. They allow a signed-in user to read and write only `users/{their uid}/**`.
+3. Storage rules should allow that same user to read and write `garments/{uid}/**`.
+
+Closet data is stored per user:
+
+- `users/{uid}/garments`
+- `users/{uid}/outfits`
+- `users/{uid}/calendar`
+
+Another database can replace Firebase by implementing `AuthGateway`, `GarmentStore`, `OutfitStore`, and `CalendarStore`, then changing the providers in `lib/presentation/providers/providers.dart`. Screens do not import Firebase.
 
 ### 4. Get an AI API key
 
@@ -94,20 +93,25 @@ Or remove the font declarations from `pubspec.yaml` to use the fallback.
 
 ```
 lib/
-├── core/
-│   ├── constants/   # App constants, categories, colors
-│   ├── theme/       # Dark theme, color palette
-│   └── utils/       # Date formatters, color helpers
-├── data/
-│   ├── datasources/ # AI service (Anthropic API)
+├── domain/
+│   ├── auth/        # AuthGateway and session, no Firebase types
+│   ├── closet/      # GarmentStore, OutfitStore, CalendarStore
+│   ├── diagnostics/ # CrashReporter
+│   ├── imaging/     # BackgroundRemover
 │   ├── models/      # Garment, Outfit, CalendarEntry
-│   └── repositories/# Supabase CRUD for each entity
+│   └── styling/     # OutfitSuggester
+├── data/
+│   ├── anthropic/   # Outfit suggestion adapter
+│   ├── datasources/ # On-device background removal
+│   ├── diagnostics/ # Crashlytics adapter and web/desktop no-op
+│   └── firebase/    # Auth, Firestore, and Storage adapters
+├── core/            # Theme, constants, and shared helpers
 ├── presentation/
-│   ├── providers/   # Riverpod providers (central)
-│   ├── screens/     # All screens by feature
-│   └── widgets/     # Reusable UI components
+│   ├── providers/   # Composition root: ports wired to Firebase
+│   ├── screens/
+│   └── widgets/
 ├── app.dart         # GoRouter + MaterialApp
-└── main.dart        # Supabase init + entry point
+└── main.dart        # Firebase init, Crashlytics, ProviderScope
 ```
 
 ## AI Outfit Suggestions
@@ -118,7 +122,7 @@ The AI tab in Outfits uses the model configured in `AI_MODEL` to analyze your wa
 - Styling tip
 - Occasion label
 
-Suggestions are generated fresh each time (no caching) and can be saved directly as outfits.
+Suggestions for the same occasion, season, and weather are reused while the wardrobe stays the same. Changing those filters requests a new set. Each suggestion can be saved directly as an outfit.
 
 ## Building for release
 
