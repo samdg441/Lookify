@@ -173,7 +173,7 @@ class _AiSuggestionsState extends ConsumerState<_AiSuggestions> {
 
   @override
   Widget build(BuildContext context) {
-    final params = AiSuggestionParams(occasion: _occasion, season: _season);
+    final params = SuggestionRequest(occasion: _occasion, season: _season);
     final suggestionsAsync = ref.watch(aiSuggestionsProvider(params));
 
     return Column(

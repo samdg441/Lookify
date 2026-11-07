@@ -1,36 +1,59 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/garment_repository.dart';
-import '../../data/repositories/outfit_repository.dart';
-import '../../data/repositories/calendar_repository.dart';
-import '../../data/datasources/ai_service.dart';
+
+import '../../data/anthropic/anthropic_outfit_suggester.dart';
 import '../../data/datasources/background_removal_service.dart';
 import '../../data/datasources/model_install_service.dart';
-import '../../data/models/garment.dart';
-import '../../data/models/outfit.dart';
-import '../../data/models/calendar_entry.dart';
+import '../../data/diagnostics/crash_reporter_factory.dart';
+import '../../data/firebase/firebase_auth_gateway.dart';
+import '../../data/firebase/firebase_calendar_store.dart';
+import '../../data/firebase/firebase_garment_store.dart';
+import '../../data/firebase/firebase_outfit_store.dart';
+import '../../domain/auth/auth_gateway.dart';
+import '../../domain/auth/auth_session.dart';
+import '../../domain/closet/calendar_store.dart';
+import '../../domain/closet/garment_store.dart';
+import '../../domain/closet/outfit_store.dart';
+import '../../domain/closet/wardrobe_insights.dart';
+import '../../domain/diagnostics/crash_reporter.dart';
+import '../../domain/imaging/background_remover.dart';
+import '../../domain/models/calendar_entry.dart';
+import '../../domain/models/garment.dart';
+import '../../domain/models/outfit.dart';
+import '../../domain/styling/outfit_suggestion.dart';
+import '../../domain/styling/outfit_suggester.dart';
 
-// ─── Infrastructure ───────────────────────────────────────────────────────────
+export '../../domain/styling/outfit_suggestion.dart' show SuggestionRequest;
 
-final authStateProvider = StreamProvider<User?>(
-  (ref) => FirebaseAuth.instance.authStateChanges(),
+final crashReporterProvider = Provider<CrashReporter>(
+  (ref) => createCrashReporter(),
 );
 
-final currentUserProvider = Provider<User?>((ref) {
+final authGatewayProvider = Provider<AuthGateway>(
+  (ref) => FirebaseAuthGateway(),
+);
+
+final authStateProvider = StreamProvider<AuthSession?>(
+  (ref) => ref.watch(authGatewayProvider).watchSession(),
+);
+
+final currentUserProvider = Provider<AuthSession?>((ref) {
   final asyncUser = ref.watch(authStateProvider);
-  return asyncUser.asData?.value ?? FirebaseAuth.instance.currentUser;
+  return asyncUser.asData?.value ??
+      ref.watch(authGatewayProvider).currentSession;
 });
 
-final aiServiceProvider = Provider<AiService>(
-  (_) => AiService(
+final aiServiceProvider = Provider<OutfitSuggester>(
+  (_) => AnthropicOutfitSuggester(
     dotenv.env['AI_API_KEY'] ?? '',
     dotenv.env['AI_MODEL'] ?? '',
   ),
 );
 
-final backgroundRemovalServiceProvider = Provider<BackgroundRemovalService>(
-  (_) => BackgroundRemovalService(),
+final backgroundRemovalServiceProvider = Provider<BackgroundRemover>(
+  (ref) => BackgroundRemovalService(
+    crashReporter: ref.watch(crashReporterProvider),
+  ),
 );
 
 final modelInstallServiceProvider = Provider<ModelInstallService>(
@@ -43,21 +66,17 @@ final modelInstallServiceProvider = Provider<ModelInstallService>(
 /// "still downloading" state apart from a real segmentation failure.
 final backgroundRemovalModelProgressProvider = StateProvider<int?>((_) => null);
 
-// ─── Repositories ─────────────────────────────────────────────────────────────
-
-final garmentRepositoryProvider = Provider<GarmentRepository>(
-  (ref) => GarmentRepository(),
+final garmentRepositoryProvider = Provider<GarmentStore>(
+  (ref) => FirebaseGarmentStore(),
 );
 
-final outfitRepositoryProvider = Provider<OutfitRepository>(
-  (ref) => OutfitRepository(),
+final outfitRepositoryProvider = Provider<OutfitStore>(
+  (ref) => FirebaseOutfitStore(),
 );
 
-final calendarRepositoryProvider = Provider<CalendarRepository>(
-  (ref) => CalendarRepository(),
+final calendarRepositoryProvider = Provider<CalendarStore>(
+  (ref) => FirebaseCalendarStore(),
 );
-
-// ─── Garments ─────────────────────────────────────────────────────────────────
 
 final selectedCategoryProvider = StateProvider<String>((ref) => 'All');
 
@@ -72,8 +91,6 @@ final garmentProvider =
   return ref.watch(garmentRepositoryProvider).getGarment(id);
 });
 
-// ─── Outfits ──────────────────────────────────────────────────────────────────
-
 final selectedOccasionProvider = StateProvider<String>((ref) => 'All');
 
 final outfitsProvider = FutureProvider.autoDispose<List<Outfit>>((ref) {
@@ -86,8 +103,6 @@ final outfitProvider =
     FutureProvider.autoDispose.family<Outfit, String>((ref, id) {
   return ref.watch(outfitRepositoryProvider).getOutfit(id);
 });
-
-// ─── Calendar ─────────────────────────────────────────────────────────────────
 
 final selectedMonthProvider = StateProvider<DateTime>(
   (ref) => DateTime.now(),
@@ -105,18 +120,9 @@ final calendarEntryForDateProvider =
   return ref.watch(calendarRepositoryProvider).getEntryForDate(date);
 });
 
-// ─── AI Suggestions ───────────────────────────────────────────────────────────
-
-class AiSuggestionParams {
-  final String? occasion;
-  final String? season;
-  AiSuggestionParams({this.occasion, this.season});
-}
-
 final aiSuggestionsProvider = FutureProvider.autoDispose
-    .family<List<OutfitSuggestion>, AiSuggestionParams>((ref, params) async {
-  final garments =
-      await ref.watch(garmentRepositoryProvider).getGarments();
+    .family<List<OutfitSuggestion>, SuggestionRequest>((ref, params) async {
+  final garments = await ref.watch(garmentRepositoryProvider).getGarments();
   if (garments.isEmpty) return [];
   return ref.watch(aiServiceProvider).suggestOutfits(
         garments: garments,
@@ -126,17 +132,29 @@ final aiSuggestionsProvider = FutureProvider.autoDispose
       );
 });
 
-// ─── Analytics ────────────────────────────────────────────────────────────────
-
-final categoryStatsProvider =
-    FutureProvider.autoDispose<Map<String, int>>((ref) {
-  return ref.watch(garmentRepositoryProvider).getCategoryStats();
+final wardrobeInsightsProvider =
+    FutureProvider.autoDispose<WardrobeInsights>((ref) {
+  return ref.watch(garmentRepositoryProvider).insights();
 });
 
-final mostWornProvider = FutureProvider.autoDispose<List<Garment>>((ref) {
-  return ref.watch(garmentRepositoryProvider).getMostWorn(limit: 5);
+final wardrobeSizeProvider = Provider<AsyncValue<int>>((ref) {
+  return ref.watch(wardrobeInsightsProvider).whenData((insights) => insights.total);
 });
 
-final leastWornProvider = FutureProvider.autoDispose<List<Garment>>((ref) {
-  return ref.watch(garmentRepositoryProvider).getLeastWorn(limit: 5);
+final categoryStatsProvider = Provider<AsyncValue<Map<String, int>>>((ref) {
+  return ref
+      .watch(wardrobeInsightsProvider)
+      .whenData((insights) => insights.categoryCounts);
+});
+
+final mostWornProvider = Provider<AsyncValue<List<Garment>>>((ref) {
+  return ref
+      .watch(wardrobeInsightsProvider)
+      .whenData((insights) => insights.mostWorn);
+});
+
+final leastWornProvider = Provider<AsyncValue<List<Garment>>>((ref) {
+  return ref
+      .watch(wardrobeInsightsProvider)
+      .whenData((insights) => insights.leastWorn);
 });

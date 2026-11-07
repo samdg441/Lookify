@@ -1,8 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
+import 'domain/auth/auth_gateway.dart';
+import 'domain/auth/auth_session.dart';
+import 'presentation/providers/providers.dart';
 import 'presentation/screens/auth/splash_screen.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/register_screen.dart';
@@ -19,17 +23,26 @@ import 'presentation/screens/profile/profile_screen.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-// Notifica a GoRouter cuando cambia el estado de auth, sin recrear el router.
-class _AuthNotifier extends ChangeNotifier {
-  _AuthNotifier() {
-    FirebaseAuth.instance.authStateChanges().listen((_) {
+class _SessionRefresh extends ChangeNotifier {
+  _SessionRefresh(this._gateway) {
+    _subscription = _gateway.watchSession().listen((_) {
       notifyListeners();
     });
+  }
+
+  final AuthGateway _gateway;
+  late final StreamSubscription<AuthSession?> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
   }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final notifier = _AuthNotifier();
+  final auth = ref.watch(authGatewayProvider);
+  final notifier = _SessionRefresh(auth);
   ref.onDispose(notifier.dispose);
 
   return GoRouter(
@@ -37,7 +50,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: notifier,
     redirect: (context, state) {
-      final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+      final isLoggedIn = auth.currentSession != null;
       final loc = state.matchedLocation;
       final isAuthRoute =
           loc == '/login' || loc == '/register' || loc == '/';
@@ -134,6 +147,9 @@ class VirtualClosetApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    ref.listen(authStateProvider, (_, next) {
+      ref.read(crashReporterProvider).setUser(next.asData?.value?.id);
+    });
 
     return MaterialApp.router(
       title: 'Virtual Closet',

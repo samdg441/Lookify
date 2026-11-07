@@ -1,10 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../domain/auth/auth_session.dart';
+import '../../../domain/auth/credential_rules.dart';
+import '../../providers/providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -31,15 +33,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailCtrl.text.trim(),
-        password: _passwordCtrl.text,
-      );
+      await ref.read(authGatewayProvider).signIn(
+            email: _emailCtrl.text,
+            password: _passwordCtrl.text,
+          );
       if (mounted) context.go('/home');
-    } catch (e) {
+    } on AuthFailure catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } catch (error, stackTrace) {
+      await ref.read(crashReporterProvider).record(
+            error,
+            stackTrace,
+            reason: 'Unexpected sign-in failure',
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not complete sign-in')),
         );
       }
     } finally {
@@ -114,8 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             labelText: 'Email',
             prefixIcon: Icon(Icons.mail_outline, color: AppColors.textDisabled),
           ),
-          validator: (v) =>
-              v == null || !v.contains('@') ? 'Enter a valid email' : null,
+          validator: CredentialRules.email,
         ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
         const SizedBox(height: 16),
         TextFormField(
@@ -136,8 +148,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
-          validator: (v) =>
-              v == null || v.length < 6 ? 'Minimum 6 characters' : null,
+          validator: CredentialRules.password,
         ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1),
       ],
     );

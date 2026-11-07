@@ -8,7 +8,7 @@ import '../../widgets/category_filter.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../data/models/garment.dart';
+import '../../../domain/models/garment.dart';
 
 class OutfitBuilderScreen extends ConsumerStatefulWidget {
   const OutfitBuilderScreen({super.key});

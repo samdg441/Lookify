@@ -4,19 +4,6 @@ class AppConstants {
   static const String appName = 'Virtual Closet';
   static const String appTagline = 'Your closet, curated.';
 
-  // Supabase tables
-  static const String tableGarments = 'garments';
-  static const String tableGarmentImages = 'garment_images';
-  static const String tableOutfits = 'outfits';
-  static const String tableOutfitGarments = 'outfit_garments';
-  static const String tableCalendarEntries = 'calendar_entries';
-  static const String tableProfiles = 'profiles';
-
-  // Storage buckets
-  static const String bucketGarments = 'garments';
-  static const String bucketOutfits = 'outfits';
-  static const String bucketAvatars = 'avatars';
-
   // Garment categories
   static const List<String> garmentCategories = [
     'Tops',

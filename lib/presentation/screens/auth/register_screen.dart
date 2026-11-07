@@ -1,11 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../domain/auth/auth_session.dart';
+import '../../../domain/auth/credential_rules.dart';
+import '../../providers/providers.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -34,26 +35,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailCtrl.text.trim(),
-        password: _passwordCtrl.text,
-      );
-      final name = _nameCtrl.text.trim();
-      await credential.user?.updateDisplayName(name);
-      final uid = credential.user!.uid;
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'fullName': name,
-        'email': _emailCtrl.text.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
+      await ref.read(authGatewayProvider).register(
+            fullName: _nameCtrl.text,
+            email: _emailCtrl.text,
+            password: _passwordCtrl.text,
+          );
       if (!mounted) return;
       context.go('/home');
-    } catch (e) {
+    } on AuthFailure catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } catch (error, stackTrace) {
+      await ref.read(crashReporterProvider).record(
+            error,
+            stackTrace,
+            reason: 'Unexpected registration failure',
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not create the account')),
         );
       }
     } finally {
@@ -96,8 +99,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     prefixIcon:
                         Icon(Icons.person_outline, color: AppColors.textDisabled),
                   ),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Enter your name' : null,
+                  validator: CredentialRules.fullName,
                 ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -108,8 +110,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     prefixIcon:
                         Icon(Icons.mail_outline, color: AppColors.textDisabled),
                   ),
-                  validator: (v) =>
-                      v == null || !v.contains('@') ? 'Enter a valid email' : null,
+                  validator: CredentialRules.email,
                 ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -130,8 +131,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
-                  validator: (v) =>
-                      v == null || v.length < 6 ? 'Minimum 6 characters' : null,
+                  validator: CredentialRules.password,
                 ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1),
                 const SizedBox(height: 32),
                 SizedBox(

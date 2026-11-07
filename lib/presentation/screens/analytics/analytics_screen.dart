@@ -16,7 +16,7 @@ class AnalyticsScreen extends ConsumerWidget {
     final categoryStats = ref.watch(categoryStatsProvider);
     final mostWorn = ref.watch(mostWornProvider);
     final leastWorn = ref.watch(leastWornProvider);
-    final garments = ref.watch(garmentsProvider);
+    final wardrobeSize = ref.watch(wardrobeSizeProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -32,10 +32,10 @@ class AnalyticsScreen extends ConsumerWidget {
               ),
             ),
             SliverToBoxAdapter(
-              child: garments.when(
+              child: wardrobeSize.when(
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
-                data: (data) => _buildSummaryCards(context, data.length),
+                data: (total) => _buildSummaryCards(context, total),
               ),
             ),
             SliverToBoxAdapter(

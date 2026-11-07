@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../firebase/mappers.dart';
-import '../models/calendar_entry.dart';
-import '../models/outfit.dart';
+import '../../domain/closet/calendar_store.dart';
+import '../../domain/models/calendar_entry.dart';
+import '../../domain/models/outfit.dart';
+import 'firestore_mappers.dart';
 
-class CalendarRepository {
-  CalendarRepository({
+class FirebaseCalendarStore implements CalendarStore {
+  FirebaseCalendarStore({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
   })  : _db = firestore ?? FirebaseFirestore.instance,
@@ -23,6 +24,7 @@ class CalendarRepository {
   CollectionReference<Map<String, dynamic>> get _outfits =>
       _db.collection('users').doc(_userId).collection('outfits');
 
+  @override
   Future<List<CalendarEntry>> getEntriesForMonth(int year, int month) async {
     final start = _dateId(DateTime(year, month, 1));
     final end = _dateId(DateTime(year, month + 1, 0));
@@ -34,12 +36,14 @@ class CalendarRepository {
     return Future.wait(snap.docs.map(_entryFromDoc));
   }
 
+  @override
   Future<CalendarEntry?> getEntryForDate(DateTime date) async {
     final doc = await _calendar.doc(_dateId(date)).get();
     if (!doc.exists) return null;
     return _entryFromDoc(doc);
   }
 
+  @override
   Future<CalendarEntry> setOutfitForDate({
     required DateTime date,
     required String outfitId,
@@ -64,6 +68,7 @@ class CalendarRepository {
     return (await getEntryForDate(date))!;
   }
 
+  @override
   Future<void> removeEntryForDate(DateTime date) async {
     await _calendar.doc(_dateId(date)).delete();
   }

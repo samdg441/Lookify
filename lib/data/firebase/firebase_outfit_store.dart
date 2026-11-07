@@ -2,12 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 
-import '../firebase/mappers.dart';
-import '../models/garment.dart';
-import '../models/outfit.dart';
+import '../../domain/closet/outfit_store.dart';
+import '../../domain/models/garment.dart';
+import '../../domain/models/outfit.dart';
+import 'firestore_mappers.dart';
 
-class OutfitRepository {
-  OutfitRepository({
+class FirebaseOutfitStore implements OutfitStore {
+  FirebaseOutfitStore({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
   })  : _db = firestore ?? FirebaseFirestore.instance,
@@ -28,6 +29,7 @@ class OutfitRepository {
   CollectionReference<Map<String, dynamic>> get _calendar =>
       _db.collection('users').doc(_userId).collection('calendar');
 
+  @override
   Future<List<Outfit>> getOutfits({String? occasion}) async {
     final snap = await _outfits.orderBy('createdAt', descending: true).get();
     final wardrobe = await _wardrobeById();
@@ -42,9 +44,10 @@ class OutfitRepository {
       );
     }).toList();
     if (occasion == null || occasion == 'All') return outfits;
-    return outfits.where((o) => o.occasion == occasion).toList();
+    return outfits.where((outfit) => outfit.occasion == occasion).toList();
   }
 
+  @override
   Future<Outfit> getOutfit(String id) async {
     final doc = await _outfits.doc(id).get();
     if (!doc.exists) {
@@ -61,6 +64,7 @@ class OutfitRepository {
     );
   }
 
+  @override
   Future<Outfit> createOutfit({
     required String name,
     required List<String> garmentIds,
@@ -83,16 +87,7 @@ class OutfitRepository {
     return getOutfit(id);
   }
 
-  Future<Outfit> updateOutfit(String id, Map<String, dynamic> updates) async {
-    final mapped = <String, dynamic>{
-      for (final entry in updates.entries)
-        _fieldName(entry.key): entry.value,
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-    await _outfits.doc(id).update(mapped);
-    return getOutfit(id);
-  }
-
+  @override
   Future<void> deleteOutfit(String id) async {
     final entries = await _calendar.where('outfitId', isEqualTo: id).get();
     final batch = _db.batch();
@@ -103,6 +98,7 @@ class OutfitRepository {
     await batch.commit();
   }
 
+  @override
   Future<void> incrementWearCount(String id) async {
     final outfitRef = _outfits.doc(id);
     await _db.runTransaction((tx) async {
@@ -114,14 +110,14 @@ class OutfitRepository {
         for (final garmentId in ids) await tx.get(_garments.doc(garmentId)),
       ];
       tx.update(outfitRef, {
-        'wearCount': ((data['wearCount'] as num?)?.toInt() ?? 0) + 1,
+        'wearCount': FieldValue.increment(1),
         'lastWorn': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
       for (final snap in garmentSnaps) {
         if (!snap.exists) continue;
         tx.update(snap.reference, {
-          'wearCount': ((snap.data()?['wearCount'] as num?)?.toInt() ?? 0) + 1,
+          'wearCount': FieldValue.increment(1),
           'lastWorn': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
@@ -133,20 +129,5 @@ class OutfitRepository {
     final snap = await _garments.get();
     final garments = await Future.wait(snap.docs.map(garmentFromDoc));
     return {for (final garment in garments) garment.id: garment};
-  }
-
-  String _fieldName(String key) {
-    switch (key) {
-      case 'garment_ids':
-        return 'garmentIds';
-      case 'wear_count':
-        return 'wearCount';
-      case 'last_worn':
-        return 'lastWorn';
-      case 'image_url':
-        return 'imageUrl';
-      default:
-        return key;
-    }
   }
 }

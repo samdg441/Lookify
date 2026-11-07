@@ -6,7 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/providers.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../data/models/calendar_entry.dart';
+import '../../../domain/models/calendar_entry.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});

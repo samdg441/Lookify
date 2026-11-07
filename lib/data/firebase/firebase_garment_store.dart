@@ -6,12 +6,15 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/bounded_concurrency.dart';
 import '../../core/utils/file_utils.dart';
-import '../firebase/mappers.dart';
-import '../models/garment.dart';
+import '../../domain/closet/garment_store.dart';
+import '../../domain/closet/wardrobe_insights.dart';
+import '../../domain/models/garment.dart';
+import 'firestore_mappers.dart';
 
-class GarmentRepository {
-  GarmentRepository({
+class FirebaseGarmentStore implements GarmentStore {
+  FirebaseGarmentStore({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     FirebaseStorage? storage,
@@ -24,26 +27,37 @@ class GarmentRepository {
   final FirebaseStorage _storage;
   final _uuid = const Uuid();
 
+  static const _uploadConcurrency = 3;
+
   String get _userId => _auth.currentUser!.uid;
 
   CollectionReference<Map<String, dynamic>> get _garments =>
       _db.collection('users').doc(_userId).collection('garments');
 
+  @override
   Future<List<Garment>> getGarments({String? category}) async {
-    final snap = await _garments.orderBy('createdAt', descending: true).get();
-    final garments = await Future.wait(snap.docs.map(garmentFromDoc));
-    if (category == null || category == 'All') return garments;
-    return garments.where((g) => g.category == category).toList();
+    Query<Map<String, dynamic>> query = _garments;
+    if (category != null && category != 'All') {
+      query = query.where('category', isEqualTo: category);
+    }
+    final snap = await query.get();
+    final garments = await Future.wait(
+      snap.docs.map((doc) => garmentFromDoc(doc, storage: _storage)),
+    );
+    garments.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return garments;
   }
 
+  @override
   Future<Garment> getGarment(String id) async {
     final doc = await _garments.doc(id).get();
     if (!doc.exists) {
       throw StateError('Garment $id was not found');
     }
-    return garmentFromDoc(doc);
+    return garmentFromDoc(doc, storage: _storage);
   }
 
+  @override
   Future<Garment> createGarment({
     required String name,
     required String category,
@@ -78,11 +92,15 @@ class GarmentRepository {
     if (imageFiles.isNotEmpty) {
       final uploaded = <String>[];
       try {
-        final images = await Future.wait(imageFiles.map((file) async {
-          final path = await _uploadImage(file);
-          uploaded.add(path);
-          return path;
-        }));
+        final images = await mapWithConcurrency(
+          imageFiles,
+          (file) async {
+            final path = await _uploadImage(file);
+            uploaded.add(path);
+            return path;
+          },
+          maxConcurrent: _uploadConcurrency,
+        );
         await doc.update({
           'images': [
             for (var i = 0; i < images.length; i++)
@@ -103,17 +121,7 @@ class GarmentRepository {
     return getGarment(id);
   }
 
-  Future<Garment> updateGarment(String id, Map<String, dynamic> updates) async {
-    final mapped = <String, dynamic>{
-      for (final entry in updates.entries)
-        if (entry.key != 'user_id' && entry.key != 'id')
-          _fieldName(entry.key): entry.value,
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-    await _garments.doc(id).update(mapped);
-    return getGarment(id);
-  }
-
+  @override
   Future<void> deleteGarment(String id) async {
     final doc = await _garments.doc(id).get();
     final paths = _imagePaths(doc.data());
@@ -121,38 +129,54 @@ class GarmentRepository {
     await _deleteStorage(paths);
   }
 
+  @override
   Future<void> incrementWearCount(String id) async {
-    final ref = _garments.doc(id);
-    await _db.runTransaction((tx) async {
-      final snap = await tx.get(ref);
-      final count = (snap.data()?['wearCount'] as num?)?.toInt() ?? 0;
-      tx.update(ref, {
-        'wearCount': count + 1,
-        'lastWorn': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+    await _garments.doc(id).update({
+      'wearCount': FieldValue.increment(1),
+      'lastWorn': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
-  Future<Map<String, int>> getCategoryStats() async {
-    final garments = await getGarments();
-    final stats = <String, int>{};
+  @override
+  Future<WardrobeInsights> insights({int limit = 5}) async {
+    final snap = await _garments.get();
+    final garments = await Future.wait(
+      snap.docs.map(
+        (doc) => garmentFromDoc(doc, storage: _storage, resolveImages: false),
+      ),
+    );
+
+    final counts = <String, int>{};
     for (final garment in garments) {
-      stats[garment.category] = (stats[garment.category] ?? 0) + 1;
+      counts[garment.category] = (counts[garment.category] ?? 0) + 1;
     }
-    return stats;
-  }
 
-  Future<List<Garment>> getLeastWorn({int limit = 5}) async {
-    final garments = await getGarments();
-    garments.sort((a, b) => a.wearCount.compareTo(b.wearCount));
-    return garments.take(limit).toList();
-  }
+    final byWear = [...garments]
+      ..sort((a, b) => b.wearCount.compareTo(a.wearCount));
+    final mostIds = byWear.take(limit).map((g) => g.id).toSet();
+    final leastIds = byWear.reversed.take(limit).map((g) => g.id).toSet();
+    final highlighted = mostIds.union(leastIds);
 
-  Future<List<Garment>> getMostWorn({int limit = 5}) async {
-    final garments = await getGarments();
-    garments.sort((a, b) => b.wearCount.compareTo(a.wearCount));
-    return garments.take(limit).toList();
+    final resolved = <String, Garment>{};
+    await Future.wait(
+      snap.docs.where((doc) => highlighted.contains(doc.id)).map((doc) async {
+        resolved[doc.id] = await garmentFromDoc(doc, storage: _storage);
+      }),
+    );
+
+    List<Garment> pick(Iterable<Garment> source) {
+      return [
+        for (final garment in source) resolved[garment.id] ?? garment,
+      ];
+    }
+
+    return WardrobeInsights(
+      total: garments.length,
+      categoryCounts: counts,
+      mostWorn: pick(byWear.take(limit)),
+      leastWorn: pick(byWear.reversed.take(limit)),
+    );
   }
 
   Future<String> _uploadImage(File file) async {
@@ -178,18 +202,5 @@ class GarmentRepository {
       for (final image in raw)
         if (image is Map && image['path'] is String) image['path'] as String,
     ];
-  }
-
-  String _fieldName(String key) {
-    switch (key) {
-      case 'wear_count':
-        return 'wearCount';
-      case 'last_worn':
-        return 'lastWorn';
-      case 'image_url':
-        return 'imageUrl';
-      default:
-        return key;
-    }
   }
 }
