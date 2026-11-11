@@ -11,7 +11,7 @@ flutter --version   # requires 3.19+
 flutter pub get
 ```
 
-Make sure `.env` has `AI_API_KEY` and `AI_MODEL` before using outfit suggestions. Firebase options for Android and web already live in `lib/firebase_options.dart`. Those are the configured platforms.
+Make sure outfit suggestions are deployed as the `suggestOutfits` Cloud Function. The Anthropic key stays in Firebase Secret Manager (`ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL`), not in the app. Firebase options for Android and web already live in `lib/firebase_options.dart`. Those are the configured platforms.
 
 ## Running in development
 

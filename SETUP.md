@@ -41,14 +41,17 @@
 flutter --version  # requires 3.19+
 ```
 
-### 2. Configure environment
+### 2. Outfit suggestions
 
-Create `.env` in the project root. The app loads it at startup, and outfit suggestions need both keys:
+Suggestions are requested from the Cloud Function `suggestOutfits`. The app does not ship an API key. Set these Firebase secrets before deploying functions:
 
-```dotenv
-AI_API_KEY=sk-ant-...
-AI_MODEL=<model-id>
+```bash
+firebase functions:secrets:set ANTHROPIC_API_KEY
+firebase functions:secrets:set ANTHROPIC_MODEL
+firebase deploy --only functions,firestore:rules,storage
 ```
+
+`ANTHROPIC_MODEL` is the model id. A small, fast model is enough.
 
 ### 3. Firebase
 
@@ -56,8 +59,6 @@ The Android and web apps are already registered on the Firebase project `lookify
 
 1. In Firebase Console, enable Email/Password under Authentication.
 2. Deploy `firestore.rules`. They allow a signed-in user to read and write only `users/{their uid}/**`.
-3. Storage rules should allow that same user to read and write `garments/{uid}/**`.
-
 Closet data is stored per user:
 
 - `users/{uid}/garments`
@@ -66,21 +67,14 @@ Closet data is stored per user:
 
 Another database can replace Firebase by implementing `AuthGateway`, `GarmentStore`, `OutfitStore`, and `CalendarStore`, then changing the providers in `lib/presentation/providers/providers.dart`. Screens do not import Firebase.
 
-### 4. Get an AI API key
-
-1. Go to https://console.anthropic.com
-2. Create an API key
-3. Add it to `.env` as `AI_API_KEY`
-4. Set `AI_MODEL` in `.env` to the ID of the model you want to use (a small, fast model is enough for outfit suggestions)
-
-### 5. Install dependencies & run
+### 4. Install dependencies & run
 
 ```bash
 flutter pub get
 flutter run
 ```
 
-### 6. (Optional) Add Playfair Display fonts
+### 5. (Optional) Add Playfair Display fonts
 
 Download from Google Fonts and place in `assets/fonts/`:
 - `PlayfairDisplay-Regular.ttf`
@@ -101,10 +95,10 @@ lib/
 │   ├── models/      # Garment, Outfit, CalendarEntry
 │   └── styling/     # OutfitSuggester
 ├── data/
-│   ├── anthropic/   # Outfit suggestion adapter
+│   ├── firebase/    # Auth, Firestore, Storage, and outfit suggestions
 │   ├── datasources/ # On-device background removal
 │   ├── diagnostics/ # Crashlytics adapter and web/desktop no-op
-│   └── firebase/    # Auth, Firestore, and Storage adapters
+│   └── firebase/    # Auth, Firestore, Storage, and outfit suggestions
 ├── core/            # Theme, constants, and shared helpers
 ├── presentation/
 │   ├── providers/   # Composition root: ports wired to Firebase
@@ -116,13 +110,7 @@ lib/
 
 ## AI Outfit Suggestions
 
-The AI tab in Outfits uses the model configured in `AI_MODEL` to analyze your wardrobe and generate outfit suggestions with:
-- Outfit name and description
-- Specific garments from your closet
-- Styling tip
-- Occasion label
-
-Suggestions for the same occasion, season, and weather are reused while the wardrobe stays the same. Changing those filters requests a new set. Each suggestion can be saved directly as an outfit.
+The AI tab in Outfits calls `suggestOutfits`. The function uses the wardrobe and the occasion, season, and weather filters, then returns an outfit name, the garments from the closet, a styling tip, and an occasion. The same filters are reused while the wardrobe stays the same. Changing those filters requests a new set. Each suggestion can be saved directly as an outfit.
 
 ## Building for release
 
