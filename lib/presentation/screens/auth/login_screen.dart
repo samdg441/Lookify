@@ -145,16 +145,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(Icons.checkroom_outlined,
-              color: AppColors.primary, size: 28),
-        ).animate().fadeIn().scale(begin: const Offset(0.8, 0.8)),
+        Image.asset(
+          'assets/images/logo_mark.png',
+          height: 64,
+          filterQuality: FilterQuality.high,
+        ).animate().fadeIn().scale(begin: const Offset(0.86, 0.86)),
         const SizedBox(height: 24),
         Text(
           AppLocalizations.of(context).welcomeBack,

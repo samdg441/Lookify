@@ -58,3 +58,6 @@ Pods/
 
 # Cloud Functions
 functions/node_modules/
+
+# Presentación local. No forma parte de la app.
+/presentation/

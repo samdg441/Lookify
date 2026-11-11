@@ -61,7 +61,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc == '/login' || loc == '/register' || loc == '/';
 
       if (!isLoggedIn && !isAuthRoute) return '/login';
-      if (isLoggedIn && isAuthRoute && loc != '/') return '/closet';
+      if (isLoggedIn && loc == '/register') return '/closet';
       return null;
     },
     routes: [
