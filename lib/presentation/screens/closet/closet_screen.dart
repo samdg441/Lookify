@@ -8,6 +8,8 @@ import '../../widgets/category_filter.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../domain/models/garment.dart';
+import '../../../l10n/catalog_labels.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ClosetScreen extends ConsumerWidget {
   const ClosetScreen({super.key});
@@ -17,6 +19,7 @@ class ClosetScreen extends ConsumerWidget {
     final selectedCategory = ref.watch(closetCategoryProvider);
     final garmentsAsync = ref.watch(garmentsProvider(selectedCategory));
 
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -35,22 +38,24 @@ class ClosetScreen extends ConsumerWidget {
               child: garmentsAsync.when(
                 loading: () => const GarmentGridShimmer(),
                 error: (e, _) => ErrorView(
-                  message: 'Failed to load wardrobe',
+                  message: l10n.wardrobeFailed,
                   onRetry: () => ref.invalidate(garmentsProvider),
                 ),
                 data: (garments) => garments.isEmpty
                     ? EmptyView(
                         icon: Icons.checkroom_outlined,
                         title: selectedCategory == 'All'
-                            ? 'Your closet is empty'
-                            : 'No $selectedCategory yet',
+                            ? l10n.closetEmpty
+                            : l10n.categoryEmpty(
+                                catalogLabel(l10n, selectedCategory),
+                              ),
                         subtitle: selectedCategory == 'All'
-                            ? 'Add your first garment to start building your wardrobe'
-                            : 'Try a different category or add a new garment',
+                            ? l10n.closetEmptySubtitle
+                            : l10n.categoryEmptySubtitle,
                         action: selectedCategory == 'All'
                             ? ElevatedButton.icon(
                                 icon: const Icon(Icons.add),
-                                label: const Text('Add Garment'),
+                                label: Text(l10n.addGarment),
                                 onPressed: () => context.push('/closet/add'),
                               )
                             : null,
@@ -77,7 +82,7 @@ class ClosetScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'My Closet',
+                AppLocalizations.of(context).myCloset,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               Consumer(
@@ -86,7 +91,9 @@ class ClosetScreen extends ConsumerWidget {
                   final count =
                       ref.watch(garmentsProvider(category)).valueOrNull?.length;
                   return Text(
-                    count != null ? '$count items' : '',
+                    count == null
+                        ? ''
+                        : AppLocalizations.of(context).itemCount(count),
                     style: Theme.of(context).textTheme.bodyMedium,
                   );
                 },

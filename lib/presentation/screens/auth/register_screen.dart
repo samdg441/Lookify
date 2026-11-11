@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/auth/auth_session.dart';
 import '../../../domain/auth/credential_rules.dart';
+import '../../../l10n/catalog_labels.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../providers/providers.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -31,6 +33,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  String? _errorText(String? code) {
+    if (code == null) return null;
+    return localizeError(AppLocalizations.of(context), code);
+  }
+
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -45,7 +52,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } on AuthFailure catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
+          SnackBar(
+            content: Text(
+              localizeError(AppLocalizations.of(context), error.message),
+            ),
+          ),
         );
       }
     } catch (error, stackTrace) {
@@ -56,7 +67,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not create the account')),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).couldNotCreateAccount),
+          ),
         );
       }
     } finally {
@@ -82,42 +95,42 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Create account',
+                  AppLocalizations.of(context).createAccount,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ).animate().fadeIn().slideX(begin: -0.1),
                 const SizedBox(height: 8),
                 Text(
-                  'Start curating your wardrobe',
+                  AppLocalizations.of(context).createAccountSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ).animate().fadeIn(delay: 100.ms),
                 const SizedBox(height: 40),
                 TextFormField(
                   controller: _nameCtrl,
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fullName,
                     prefixIcon:
                         Icon(Icons.person_outline, color: AppColors.textDisabled),
                   ),
-                  validator: CredentialRules.fullName,
+                  validator: (value) => _errorText(CredentialRules.fullName(value)),
                 ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).email,
                     prefixIcon:
                         Icon(Icons.mail_outline, color: AppColors.textDisabled),
                   ),
-                  validator: CredentialRules.email,
+                  validator: (value) => _errorText(CredentialRules.email(value)),
                 ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordCtrl,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: AppLocalizations.of(context).password,
                     prefixIcon: const Icon(Icons.lock_outline,
                         color: AppColors.textDisabled),
                     suffixIcon: IconButton(
@@ -131,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
-                  validator: CredentialRules.password,
+                  validator: (value) => _errorText(CredentialRules.password(value)),
                 ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1),
                 const SizedBox(height: 32),
                 SizedBox(
@@ -147,7 +160,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               color: AppColors.background,
                             ),
                           )
-                        : const Text('Create Account'),
+                        : Text(AppLocalizations.of(context).createAccount),
                   ),
                 ).animate().fadeIn(delay: 300.ms),
                 const SizedBox(height: 24),
@@ -156,13 +169,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account? ',
+                        AppLocalizations.of(context).alreadyHaveAccount,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       GestureDetector(
                         onTap: () => context.go('/login'),
                         child: Text(
-                          'Sign in',
+                          AppLocalizations.of(context).signIn,
                           style: GoogleFonts.inter(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,

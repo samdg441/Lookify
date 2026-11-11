@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/helpers.dart';
+import '../../l10n/catalog_labels.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class CategoryFilter extends StatelessWidget {
   const CategoryFilter({
@@ -55,7 +57,9 @@ class CategoryFilter extends StatelessWidget {
                     const SizedBox(width: 6),
                   ],
                   Text(
-                    cat,
+                    cat == 'All'
+                        ? AppLocalizations.of(context).all
+                        : catalogLabel(AppLocalizations.of(context), cat),
                     style: TextStyle(
                       color: isSelected
                           ? AppColors.background

@@ -4,6 +4,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../domain/models/garment.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/helpers.dart';
+import '../../l10n/catalog_labels.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class GarmentCard extends StatelessWidget {
   const GarmentCard({
@@ -39,7 +41,7 @@ class GarmentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: _buildImage()),
+            Expanded(child: _buildImage(context)),
             _buildInfo(context),
           ],
         ),
@@ -50,7 +52,7 @@ class GarmentCard extends StatelessWidget {
         .slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(BuildContext context) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       child: Stack(
@@ -81,7 +83,7 @@ class GarmentCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                garment.category,
+                catalogLabel(AppLocalizations.of(context), garment.category),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 10,

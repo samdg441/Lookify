@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/providers.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/models/calendar_entry.dart';
+import '../../../l10n/catalog_labels.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
@@ -49,7 +52,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
       child: Text(
-        'Calendar',
+        AppLocalizations.of(context).calendar,
         style: Theme.of(context).textTheme.headlineSmall,
       ),
     );
@@ -67,6 +70,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         {};
 
     return TableCalendar(
+      locale: Localizations.localeOf(context).toString(),
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: DateTime.utc(2030, 12, 31),
       focusedDay: _focusedDay,
@@ -135,6 +139,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Widget _buildDayDetail(BuildContext context, CalendarEntry? entry) {
+    final l10n = AppLocalizations.of(context);
     final isToday = isSameDay(_selectedDay, DateTime.now());
     final isPast = _selectedDay.isBefore(DateTime.now()) && !isToday;
 
@@ -158,8 +163,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     color: AppColors.primary.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
-                    'Today',
+                  child: Text(
+                    l10n.today,
                     style: TextStyle(
                         color: AppColors.primary,
                         fontSize: 11,
@@ -186,6 +191,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Widget _buildEntryCard(BuildContext context, CalendarEntry entry) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -211,16 +217,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  entry.outfit?.name ?? 'Outfit',
+                  entry.outfit?.name ?? l10n.outfits,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 if (entry.outfit?.occasion != null)
                   Text(
-                    entry.outfit!.occasion!,
+                    catalogLabel(l10n, entry.outfit!.occasion!),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 Text(
-                  '${entry.outfit?.garments.length ?? 0} items',
+                  l10n.itemCount(entry.outfit?.garments.length ?? 0),
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
               ],
@@ -236,6 +242,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Widget _buildEmptyDay(BuildContext context, bool isPast) {
+    final l10n = AppLocalizations.of(context);
     return GestureDetector(
       onTap: isPast ? null : () => _pickOutfit(context),
       child: Container(
@@ -258,7 +265,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
             const SizedBox(width: 12),
             Text(
-              isPast ? 'No outfit recorded' : 'Plan an outfit for this day',
+              isPast ? l10n.noOutfitRecorded : l10n.planOutfit,
               style: TextStyle(
                 color: isPast ? AppColors.textDisabled : AppColors.primary,
                 fontSize: 14,
@@ -271,11 +278,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   String _formatSelectedDay() {
-    final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return '${months[_selectedDay.month - 1]} ${_selectedDay.day}';
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.MMMMd(locale).format(_selectedDay);
   }
 
   Future<void> _pickOutfit(BuildContext context) async {
@@ -283,7 +287,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     if (!mounted || outfits.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No outfits saved yet')),
+          SnackBar(content: Text(AppLocalizations.of(context).noOutfitsSaved)),
         );
       }
       return;
@@ -314,7 +318,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Text('Pick an Outfit',
+              child: Text(AppLocalizations.of(context).pickOutfit,
                   style: Theme.of(context).textTheme.titleMedium),
             ),
             Expanded(
@@ -330,8 +334,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
                   tileColor: AppColors.card,
                   title: Text(outfits[i].name),
-                  subtitle: Text(outfits[i].occasion ?? ''),
-                  trailing: Text('${outfits[i].garments.length} items',
+                  subtitle: Text(catalogLabel(
+                    AppLocalizations.of(context),
+                    outfits[i].occasion ?? '',
+                  )),
+                  trailing: Text(
+                    AppLocalizations.of(context).itemCount(outfits[i].garments.length),
                       style: Theme.of(context).textTheme.labelSmall),
                   onTap: () => Navigator.pop(ctx, outfits[i].id),
                 ),

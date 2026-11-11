@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -59,6 +60,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
@@ -87,7 +89,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 .scale(begin: const Offset(0.7, 0.7)),
             const SizedBox(height: 28),
             Text(
-              'Virtual Closet',
+              l10n.appName,
               style: GoogleFonts.playfairDisplay(
                 color: AppColors.textPrimary,
                 fontSize: 40,
@@ -99,7 +101,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 .fadeIn(delay: 300.ms, duration: 600.ms)
                 .slideY(begin: 0.3, end: 0),
             Text(
-              'CLOSET',
+              l10n.appMark,
               style: GoogleFonts.inter(
                 color: AppColors.primary,
                 fontSize: 13,
@@ -111,7 +113,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 .fadeIn(delay: 450.ms, duration: 600.ms),
             const SizedBox(height: 16),
             Text(
-              'Your closet, curated.',
+              l10n.appTagline,
               style: GoogleFonts.inter(
                 color: AppColors.textSecondary,
                 fontSize: 14,

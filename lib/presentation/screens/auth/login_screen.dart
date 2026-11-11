@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/auth/auth_session.dart';
 import '../../../domain/auth/credential_rules.dart';
+import '../../../l10n/catalog_labels.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../providers/providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -29,6 +31,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  String? _errorText(String? code) {
+    if (code == null) return null;
+    return localizeError(AppLocalizations.of(context), code);
+  }
+
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -41,7 +48,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on AuthFailure catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
+          SnackBar(
+            content: Text(
+              localizeError(AppLocalizations.of(context), error.message),
+            ),
+          ),
         );
       }
     } catch (error, stackTrace) {
@@ -52,7 +63,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not complete sign-in')),
+          SnackBar(content: Text(AppLocalizations.of(context).couldNotSignIn)),
         );
       }
     } finally {
@@ -64,7 +75,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final emailError = CredentialRules.email(_emailCtrl.text);
     if (emailError != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(emailError)),
+        SnackBar(
+          content: Text(
+            localizeError(AppLocalizations.of(context), emailError),
+          ),
+        ),
       );
       return;
     }
@@ -73,13 +88,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authGatewayProvider).sendPasswordReset(_emailCtrl.text);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password reset email sent')),
+          SnackBar(content: Text(AppLocalizations.of(context).resetEmailSent)),
         );
       }
     } on AuthFailure catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
+          SnackBar(
+            content: Text(
+              localizeError(AppLocalizations.of(context), error.message),
+            ),
+          ),
         );
       }
     } finally {
@@ -106,7 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: _loading ? null : _sendReset,
-                    child: const Text('Forgot password?'),
+                    child: Text(AppLocalizations.of(context).forgotPassword),
                   ),
                 ),
                 _buildSignInButton(),
@@ -138,12 +157,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ).animate().fadeIn().scale(begin: const Offset(0.8, 0.8)),
         const SizedBox(height: 24),
         Text(
-          'Welcome back',
+          AppLocalizations.of(context).welcomeBack,
           style: Theme.of(context).textTheme.headlineMedium,
         ).animate().fadeIn(delay: 100.ms).slideX(begin: -0.1),
         const SizedBox(height: 8),
         Text(
-          'Sign in to your wardrobe',
+          AppLocalizations.of(context).signInSubtitle,
           style: Theme.of(context).textTheme.bodyMedium,
         ).animate().fadeIn(delay: 150.ms),
       ],
@@ -156,18 +175,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         TextFormField(
           controller: _emailCtrl,
           keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(
-            labelText: 'Email',
+          decoration: InputDecoration(
+            labelText: AppLocalizations.of(context).email,
             prefixIcon: Icon(Icons.mail_outline, color: AppColors.textDisabled),
           ),
-          validator: CredentialRules.email,
+          validator: (value) => _errorText(CredentialRules.email(value)),
         ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
         const SizedBox(height: 16),
         TextFormField(
           controller: _passwordCtrl,
           obscureText: _obscurePassword,
           decoration: InputDecoration(
-            labelText: 'Password',
+            labelText: AppLocalizations.of(context).password,
             prefixIcon:
                 const Icon(Icons.lock_outline, color: AppColors.textDisabled),
             suffixIcon: IconButton(
@@ -181,7 +200,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
-          validator: CredentialRules.password,
+          validator: (value) => _errorText(CredentialRules.password(value)),
         ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1),
       ],
     );
@@ -201,7 +220,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   color: AppColors.background,
                 ),
               )
-            : const Text('Sign In'),
+            : Text(AppLocalizations.of(context).signIn),
       ),
     ).animate().fadeIn(delay: 300.ms);
   }
@@ -213,7 +232,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'or',
+            AppLocalizations.of(context).or,
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
@@ -228,13 +247,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "Don't have an account? ",
+            AppLocalizations.of(context).noAccount,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           GestureDetector(
             onTap: () => context.go('/register'),
             child: Text(
-              'Create one',
+              AppLocalizations.of(context).createOne,
               style: GoogleFonts.inter(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w600,

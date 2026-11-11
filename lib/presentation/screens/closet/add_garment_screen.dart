@@ -13,6 +13,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/file_utils.dart';
 import '../../../domain/imaging/local_photo.dart';
 import '../../../domain/models/garment.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class AddGarmentScreen extends ConsumerStatefulWidget {
   const AddGarmentScreen({super.key, this.garmentId});
@@ -117,11 +118,10 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
         // common cause of a skip, and worth telling apart from a genuine
         // per-photo segmentation failure (no clear subject, corrupt image).
         final modelProgress = ref.read(backgroundRemovalModelProgressProvider);
+        final l10n = AppLocalizations.of(context);
         final message = modelProgress != null && modelProgress < 100
-            ? 'Preparing background removal ($modelProgress%) — '
-                'try again in a moment'
-            : "Couldn't remove background for $skipped of "
-                '${picked.length} photo(s)';
+            ? l10n.backgroundPreparing(modelProgress)
+            : l10n.backgroundSkipped(skipped, picked.length);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -177,7 +177,9 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not save the garment: $e')),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).couldNotSaveGarment('$e')),
+          ),
         );
       }
     } finally {
@@ -218,7 +220,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
       if (existing.hasError && !_hydrated) {
         return Scaffold(
           appBar: AppBar(),
-          body: const Center(child: Text('Garment not found')),
+          body: Center(child: Text(AppLocalizations.of(context).garmentNotFound)),
         );
       }
       final garment = existing.asData?.value;
@@ -227,7 +229,11 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_editing ? 'Edit Garment' : 'Add Garment'),
+        title: Text(
+          _editing
+              ? AppLocalizations.of(context).editGarment
+              : AppLocalizations.of(context).addGarment,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
@@ -244,7 +250,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
                       color: AppColors.primary,
                     ),
                   )
-                : const Text('Save'),
+                : Text(AppLocalizations.of(context).save),
           ),
         ],
       ),
@@ -288,13 +294,13 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
                 color: AppColors.background.withOpacity(0.6),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircularProgressIndicator(color: AppColors.primary),
-                    SizedBox(height: 12),
-                    Text('Removing background...'),
+                    const CircularProgressIndicator(color: AppColors.primary),
+                    const SizedBox(height: 12),
+                    Text(AppLocalizations.of(context).removingBackground),
                   ],
                 ),
               ),
@@ -323,12 +329,12 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
                   color: AppColors.textDisabled, size: 40),
               const SizedBox(height: 12),
               Text(
-                'Add photos',
+                AppLocalizations.of(context).addPhotos,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 4),
               Text(
-                'Tap to upload from camera or gallery',
+                AppLocalizations.of(context).addPhotosHint,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -435,7 +441,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
             const SizedBox(height: 20),
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Camera'),
+              title: Text(AppLocalizations.of(context).camera),
               onTap: () {
                 context.pop();
                 _pickImages(ImageSource.camera);
@@ -443,7 +449,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Gallery'),
+              title: Text(AppLocalizations.of(context).gallery),
               onTap: () {
                 context.pop();
                 _pickImages(ImageSource.gallery);
@@ -467,8 +473,8 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         child: SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Remove background'),
-          subtitle: const Text('Applies on-device to new photos'),
+          title: Text(AppLocalizations.of(context).removeBackground),
+          subtitle: Text(AppLocalizations.of(context).removeBackgroundSubtitle),
           value: _removeBackground,
           onChanged: (val) => setState(() => _removeBackground = val),
         ),
@@ -483,15 +489,16 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
         TextFormField(
           controller: _nameCtrl,
           textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(labelText: 'Name *'),
-          validator: (v) =>
-              v == null || v.trim().isEmpty ? 'Enter garment name' : null,
+          decoration: InputDecoration(labelText: AppLocalizations.of(context).nameRequired),
+          validator: (v) => v == null || v.trim().isEmpty
+              ? AppLocalizations.of(context).enterGarmentName
+              : null,
         ),
         const SizedBox(height: 16),
         TextFormField(
           controller: _brandCtrl,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(labelText: 'Brand'),
+          decoration: InputDecoration(labelText: AppLocalizations.of(context).brand),
         ),
         const SizedBox(height: 16),
         Row(
@@ -503,14 +510,14 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
                 controller: _priceCtrl,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Price'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context).price),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: DropdownButtonFormField<String>(
                 initialValue: _currency,
-                decoration: const InputDecoration(labelText: 'Currency'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context).currency),
                 items: AppConstants.currencies
                     .map((code) => DropdownMenuItem(
                           value: code,
@@ -530,7 +537,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
 
   Widget _buildCategorySection() {
     return OptionChips(
-      label: 'Category *',
+      label: AppLocalizations.of(context).categoryRequired,
       items: AppConstants.garmentCategories,
       selected: [_category],
       onSelected: (val) => setState(() => _category = val),
@@ -539,7 +546,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
 
   Widget _buildColorSection() {
     return OptionChips(
-      label: 'Color',
+      label: AppLocalizations.of(context).color,
       items: AppConstants.garmentColors,
       selected: _color != null ? [_color!] : [],
       onSelected: (val) => setState(() => _color = _color == val ? null : val),
@@ -548,7 +555,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
 
   Widget _buildSeasonSection() {
     return OptionChips(
-      label: 'Season',
+      label: AppLocalizations.of(context).season,
       items: AppConstants.seasons,
       selected: _season != null ? [_season!] : [],
       onSelected: (val) =>
@@ -558,7 +565,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
 
   Widget _buildOccasionSection() {
     return OptionChips(
-      label: 'Occasion',
+      label: AppLocalizations.of(context).occasion,
       items: AppConstants.occasions,
       selected: _occasion != null ? [_occasion!] : [],
       onSelected: (val) =>
@@ -571,8 +578,8 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
       controller: _notesCtrl,
       maxLines: 3,
       textCapitalization: TextCapitalization.sentences,
-      decoration: const InputDecoration(
-        labelText: 'Notes',
+      decoration: InputDecoration(
+        labelText: AppLocalizations.of(context).notes,
         alignLabelWithHint: true,
       ),
     );

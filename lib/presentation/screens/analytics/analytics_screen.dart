@@ -7,6 +7,8 @@ import '../../widgets/garment_card.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/helpers.dart';
+import '../../../l10n/catalog_labels.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -27,7 +29,7 @@ class AnalyticsScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                 child: Text(
-                  'Analytics',
+                  AppLocalizations.of(context).analytics,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ),
@@ -67,7 +69,7 @@ class AnalyticsScreen extends ConsumerWidget {
                 data: (items) => items.isEmpty
                     ? const SizedBox.shrink()
                     : _buildGarmentList(
-                        context, 'Most Worn', items, ref),
+                        context, AppLocalizations.of(context).mostWorn, items, ref),
               ),
             ),
             SliverToBoxAdapter(
@@ -77,7 +79,7 @@ class AnalyticsScreen extends ConsumerWidget {
                 data: (items) => items.isEmpty
                     ? const SizedBox.shrink()
                     : _buildGarmentList(
-                        context, 'Least Worn', items, ref),
+                        context, AppLocalizations.of(context).leastWorn, items, ref),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
@@ -99,19 +101,19 @@ class AnalyticsScreen extends ConsumerWidget {
         children: [
           _summaryCard(context,
               value: '$total',
-              label: 'Total Items',
+              label: AppLocalizations.of(context).totalItems,
               icon: Icons.checkroom_outlined,
               color: AppColors.primary),
           const SizedBox(width: 12),
           _summaryCard(context,
               value: planned,
-              label: 'Outfits Planned',
+              label: AppLocalizations.of(context).outfitsPlanned,
               icon: Icons.calendar_today_outlined,
               color: AppColors.info),
           const SizedBox(width: 12),
           _summaryCard(context,
               value: costPerWear,
-              label: 'Cost / Wear',
+              label: AppLocalizations.of(context).costPerWear,
               icon: Icons.attach_money,
               color: AppColors.success),
         ],
@@ -173,7 +175,7 @@ class AnalyticsScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Wardrobe Breakdown',
+          Text(AppLocalizations.of(context).wardrobeBreakdown,
                   style: Theme.of(context).textTheme.titleMedium)
               .animate()
               .fadeIn(delay: 100.ms),
@@ -218,7 +220,7 @@ class AnalyticsScreen extends ConsumerWidget {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                e.key,
+                                catalogLabel(AppLocalizations.of(context), e.key),
                                 style: Theme.of(context).textTheme.bodySmall,
                                 overflow: TextOverflow.ellipsis,
                               ),

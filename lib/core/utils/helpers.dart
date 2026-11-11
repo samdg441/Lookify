@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../constants/app_constants.dart';
 
-String formatShortDate(DateTime date) => DateFormat('MMM d').format(date);
+String formatShortDate(DateTime date, [String? locale]) =>
+    DateFormat('MMM d', locale).format(date);
 
 String formatPrice(double amount, [String currency = AppConstants.defaultCurrency]) {
   final symbol = AppConstants.currencySymbols[currency] ?? currency;

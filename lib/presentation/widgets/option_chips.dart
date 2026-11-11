@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
+import '../../l10n/catalog_labels.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class OptionChips extends StatelessWidget {
   const OptionChips({
@@ -45,7 +47,7 @@ class OptionChips extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  item,
+                  catalogLabel(AppLocalizations.of(context), item),
                   style: TextStyle(
                     color: isSelected
                         ? AppColors.background

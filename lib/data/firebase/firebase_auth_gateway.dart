@@ -50,7 +50,7 @@ class FirebaseAuthGateway implements AuthGateway {
       );
       final user = credential.user;
       if (user == null) {
-        throw const AuthFailure('Could not create the account');
+        throw const AuthFailure('accountCreateFailed');
       }
       final name = fullName.trim();
       await user.updateDisplayName(name);
@@ -61,7 +61,7 @@ class FirebaseAuthGateway implements AuthGateway {
           'createdAt': FieldValue.serverTimestamp(),
         });
       } on FirebaseException {
-        throw const AuthFailure('Could not save your profile');
+        throw const AuthFailure('profileSaveFailed');
       }
     } on AuthFailure {
       rethrow;
@@ -86,7 +86,7 @@ class FirebaseAuthGateway implements AuthGateway {
   Future<void> updateProfile({required String fullName}) async {
     final user = _auth.currentUser;
     if (user == null) {
-      throw const AuthFailure('Sign in again to update your profile');
+      throw const AuthFailure('signInRequired');
     }
     final name = fullName.trim();
     try {
@@ -100,7 +100,7 @@ class FirebaseAuthGateway implements AuthGateway {
     } on FirebaseAuthException catch (error) {
       throw AuthFailure(_message(error));
     } on FirebaseException {
-      throw const AuthFailure('Could not save your profile');
+      throw const AuthFailure('profileSaveFailed');
     }
   }
 
@@ -109,7 +109,7 @@ class FirebaseAuthGateway implements AuthGateway {
     final user = _auth.currentUser;
     final email = user?.email;
     if (user == null || email == null) {
-      throw const AuthFailure('Sign in again to continue');
+      throw const AuthFailure('signInRequired');
     }
     try {
       await user.reauthenticateWithCredential(
@@ -124,7 +124,7 @@ class FirebaseAuthGateway implements AuthGateway {
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user == null) {
-      throw const AuthFailure('Sign in again to continue');
+      throw const AuthFailure('signInRequired');
     }
     try {
       await _db.collection('users').doc(user.uid).delete();
@@ -132,7 +132,7 @@ class FirebaseAuthGateway implements AuthGateway {
     } on FirebaseAuthException catch (error) {
       throw AuthFailure(_message(error));
     } on FirebaseException {
-      throw const AuthFailure('Could not delete the account');
+      throw const AuthFailure('accountDeleteFailed');
     }
   }
 
@@ -148,27 +148,27 @@ class FirebaseAuthGateway implements AuthGateway {
   String _message(FirebaseAuthException error) {
     switch (error.code) {
       case 'invalid-email':
-        return 'Enter a valid email';
+        return 'invalidEmail';
       case 'email-already-in-use':
-        return 'An account already exists for this email';
+        return 'emailInUse';
       case 'weak-password':
-        return 'Password does not meet the requirements';
+        return 'weakPassword';
       case 'user-disabled':
-        return 'This account is disabled';
+        return 'userDisabled';
       case 'operation-not-allowed':
-        return 'Email and password sign-in is not enabled';
+        return 'signInDisabled';
       case 'too-many-requests':
-        return 'Too many attempts. Try again later';
+        return 'tooManyRequests';
       case 'wrong-password':
       case 'user-not-found':
       case 'invalid-credential':
-        return 'Email or password is incorrect';
+        return 'invalidCredentials';
       case 'requires-recent-login':
-        return 'Sign in again, then retry';
+        return 'recentLoginRequired';
       case 'network-request-failed':
-        return 'Check your internet connection';
+        return 'networkError';
       default:
-        return 'Could not complete sign-in';
+        return 'signInFailed';
     }
   }
 }

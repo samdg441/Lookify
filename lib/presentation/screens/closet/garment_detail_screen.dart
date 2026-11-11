@@ -8,6 +8,8 @@ import '../../widgets/common/loading_indicator.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/helpers.dart';
 import '../../../domain/models/garment.dart';
+import '../../../l10n/catalog_labels.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class GarmentDetailScreen extends ConsumerStatefulWidget {
   const GarmentDetailScreen({super.key, required this.id});
@@ -36,7 +38,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
       loading: () => const Scaffold(body: LoadingIndicator()),
       error: (e, _) => Scaffold(
         appBar: AppBar(),
-        body: ErrorView(message: 'Garment not found'),
+        body: ErrorView(message: AppLocalizations.of(context).garmentNotFound),
       ),
       data: (garment) => Scaffold(
         body: CustomScrollView(
@@ -188,7 +190,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
-            garment.category,
+            catalogLabel(AppLocalizations.of(context), garment.category),
             style: TextStyle(
               color: categoryColor(garment.category),
               fontWeight: FontWeight.w600,
@@ -201,23 +203,27 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
   }
 
   Widget _buildStats(BuildContext context, Garment garment) {
+    final l10n = AppLocalizations.of(context);
     final cards = <Widget>[
       _statCard(context,
           icon: Icons.repeat,
-          label: 'Times worn',
+          label: l10n.timesWorn,
           value: '${garment.wearCount}'),
       if (garment.price != null)
         _statCard(context,
             icon: Icons.attach_money,
-            label: 'Cost / wear',
+            label: l10n.costPerWear,
             value: garment.costPerWear > 0
                 ? formatPrice(garment.costPerWear, garment.currency)
-                : 'N/A'),
+                : l10n.notAvailable),
       if (garment.lastWorn != null)
         _statCard(context,
             icon: Icons.calendar_today_outlined,
-            label: 'Last worn',
-            value: formatShortDate(garment.lastWorn!)),
+            label: l10n.lastWorn,
+            value: formatShortDate(
+              garment.lastWorn!,
+              Localizations.localeOf(context).toString(),
+            )),
     ];
 
     return Row(
@@ -259,11 +265,13 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
   }
 
   Widget _buildAttributes(BuildContext context, Garment garment) {
+    final l10n = AppLocalizations.of(context);
     final attrs = <String, String?>{
-      'Color': garment.color,
-      'Season': garment.season,
-      'Occasion': garment.occasion,
-      'Price': garment.price != null
+      l10n.color: garment.color == null ? null : catalogLabel(l10n, garment.color!),
+      l10n.season: garment.season == null ? null : catalogLabel(l10n, garment.season!),
+      l10n.occasion:
+          garment.occasion == null ? null : catalogLabel(l10n, garment.occasion!),
+      l10n.price: garment.price != null
           ? formatPrice(garment.price!, garment.currency)
           : null,
     };
@@ -330,7 +338,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
       width: double.infinity,
       child: ElevatedButton.icon(
         icon: const Icon(Icons.checkroom),
-        label: const Text('Log as Worn Today'),
+        label: Text(AppLocalizations.of(context).logWornToday),
         onPressed: () async {
           await ref.read(garmentRepositoryProvider).incrementWearCount(id);
           ref.invalidate(garmentProvider(id));
@@ -338,7 +346,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
           ref.invalidate(wardrobeInsightsProvider);
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Logged as worn!')),
+              SnackBar(content: Text(AppLocalizations.of(context).loggedWorn)),
             );
           }
         },
@@ -347,17 +355,17 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Delete Garment'),
-        content: const Text(
-            'This garment will be permanently removed from your wardrobe.'),
+        title: Text(l10n.deleteGarment),
+        content: Text(l10n.deleteGarmentBody),
         actions: [
           TextButton(
             onPressed: () => context.pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -369,8 +377,8 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
               ref.invalidate(calendarEntriesProvider);
               if (context.mounted) context.pop();
             },
-            child: const Text('Delete',
-                style: TextStyle(color: AppColors.error)),
+            child: Text(l10n.delete,
+                style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),

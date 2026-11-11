@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/catalog_labels.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// Picks one value from [options]. Tapping the current value clears it.
 Future<void> showOptionSheet({
@@ -38,7 +40,9 @@ Future<void> showOptionSheet({
           ),
           for (final option in options)
             ListTile(
-              title: Text(option),
+              title: Text(
+                catalogLabel(AppLocalizations.of(sheetContext), option),
+              ),
               trailing: selected == option
                   ? const Icon(Icons.check, color: AppColors.primary)
                   : null,

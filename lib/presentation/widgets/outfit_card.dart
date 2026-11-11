@@ -3,6 +3,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../domain/models/outfit.dart';
 import '../../core/theme/app_colors.dart';
+import '../../l10n/catalog_labels.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class OutfitCard extends StatelessWidget {
   const OutfitCard({
@@ -112,7 +114,10 @@ class OutfitCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    outfit.occasion!,
+                    catalogLabel(
+                      AppLocalizations.of(context),
+                      outfit.occasion!,
+                    ),
                     style: const TextStyle(
                       color: AppColors.primary,
                       fontSize: 10,
@@ -122,7 +127,7 @@ class OutfitCard extends StatelessWidget {
                 ),
               const Spacer(),
               Text(
-                '${outfit.garments.length} items',
+                AppLocalizations.of(context).itemCount(outfit.garments.length),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
             ],
@@ -192,7 +197,7 @@ class OutfitSuggestionCard extends StatelessWidget {
                     Text(name,
                         style: Theme.of(context).textTheme.titleSmall),
                     Text(
-                      occasion,
+                      catalogLabel(AppLocalizations.of(context), occasion),
                       style: const TextStyle(
                           color: AppColors.primary, fontSize: 12),
                     ),
@@ -236,7 +241,7 @@ class OutfitSuggestionCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '$garmentCount items from your wardrobe',
+            AppLocalizations.of(context).itemCount(garmentCount),
             style: Theme.of(context).textTheme.labelSmall,
           ),
         ],

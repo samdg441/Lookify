@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'domain/auth/auth_gateway.dart';
 import 'domain/auth/auth_session.dart';
+import 'l10n/generated/app_localizations.dart';
+import 'presentation/providers/locale_controller.dart';
 import 'presentation/providers/providers.dart';
 import 'presentation/screens/auth/splash_screen.dart';
 import 'presentation/screens/auth/login_screen.dart';
@@ -169,13 +171,17 @@ class VirtualClosetApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final locale = ref.watch(localeProvider);
     ref.listen(authStateProvider, (_, next) {
       ref.read(crashReporterProvider).setUser(next.asData?.value?.id);
     });
 
     return MaterialApp.router(
-      title: 'Virtual Closet',
+      title: 'Lookify',
       theme: AppTheme.dark,
+      locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

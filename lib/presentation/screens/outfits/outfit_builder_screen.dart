@@ -10,6 +10,8 @@ import '../../widgets/common/loading_indicator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/models/garment.dart';
+import '../../../l10n/catalog_labels.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class OutfitBuilderScreen extends ConsumerStatefulWidget {
   const OutfitBuilderScreen({super.key});
@@ -38,13 +40,13 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
   Future<void> _save(List<Garment> all) async {
     if (_nameCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Give your outfit a name')),
+        SnackBar(content: Text(AppLocalizations.of(context).outfitNameRequired)),
       );
       return;
     }
     if (_selectedIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select at least one garment')),
+        SnackBar(content: Text(AppLocalizations.of(context).selectGarment)),
       );
       return;
     }
@@ -61,7 +63,9 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+            .showSnackBar(SnackBar(
+              content: Text(AppLocalizations.of(context).couldNotSaveOutfit('$e')),
+            ));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -75,7 +79,7 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Build Outfit'),
+        title: Text(AppLocalizations.of(context).buildOutfit),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
@@ -93,7 +97,7 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
                         color: AppColors.primary,
                       ),
                     )
-                  : const Text('Save'),
+                  : Text(AppLocalizations.of(context).save),
             ),
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
@@ -121,12 +125,12 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
           Expanded(
             child: garmentsAsync.when(
               loading: () => const GarmentGridShimmer(),
-              error: (e, _) => ErrorView(message: 'Failed to load garments'),
+              error: (e, _) => ErrorView(message: AppLocalizations.of(context).garmentsFailed),
               data: (garments) => garments.isEmpty
-                  ? const EmptyView(
+                  ? EmptyView(
                       icon: Icons.checkroom_outlined,
-                      title: 'No garments yet',
-                      subtitle: 'Add garments to your closet first',
+                      title: AppLocalizations.of(context).noGarmentsYet,
+                      subtitle: AppLocalizations.of(context).noGarmentsSubtitle,
                     )
                   : GridView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -167,9 +171,9 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
           TextField(
             controller: _nameCtrl,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              hintText: 'Outfit name',
-              prefixIcon: Icon(Icons.edit_outlined),
+            decoration: InputDecoration(
+              hintText: AppLocalizations.of(context).outfitNameHint,
+              prefixIcon: const Icon(Icons.edit_outlined),
             ),
           ),
           const SizedBox(height: 10),
@@ -177,7 +181,7 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
             children: [
               Expanded(
                 child: _dropdownChip(
-                  'Occasion',
+                  AppLocalizations.of(context).occasion,
                   _occasion,
                   AppConstants.occasions,
                   (v) => setState(() => _occasion = v),
@@ -186,7 +190,7 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: _dropdownChip(
-                  'Season',
+                  AppLocalizations.of(context).season,
                   _season,
                   AppConstants.seasons,
                   (v) => setState(() => _season = v),
@@ -225,7 +229,9 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
           children: [
             Expanded(
               child: Text(
-                selected ?? label,
+                selected == null
+                    ? label
+                    : catalogLabel(AppLocalizations.of(context), selected),
                 style: TextStyle(
                   color: selected != null
                       ? AppColors.primary
@@ -275,7 +281,7 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
             ),
           ),
           Text(
-            '${selected.length} selected',
+            AppLocalizations.of(context).selectedCount(selected.length),
             style: const TextStyle(
                 color: AppColors.primary,
                 fontSize: 12,

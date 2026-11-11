@@ -6,6 +6,8 @@ import '../../widgets/outfit_card.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/catalog_labels.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class AiSuggestionsPanel extends ConsumerStatefulWidget {
   const AiSuggestionsPanel({super.key});
@@ -41,21 +43,20 @@ class _AiSuggestionsPanelState extends ConsumerState<AiSuggestionsPanel> {
                 const CircularProgressIndicator(color: AppColors.primary),
                 const SizedBox(height: 16),
                 Text(
-                  'Curating your perfect outfits…',
+                  AppLocalizations.of(context).curating,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
             error: (_, __) => ErrorView(
-              message: 'Could not generate suggestions.\nTry again in a moment.',
+              message: AppLocalizations.of(context).suggestionsFailed,
               onRetry: () => ref.invalidate(aiSuggestionsProvider(params)),
             ),
             data: (suggestions) => suggestions.isEmpty
-                ? const EmptyView(
+                ? EmptyView(
                     icon: Icons.auto_awesome_outlined,
-                    title: 'No suggestions yet',
-                    subtitle:
-                        'Add garments to your closet\nto get AI outfit recommendations',
+                    title: AppLocalizations.of(context).noSuggestions,
+                    subtitle: AppLocalizations.of(context).noSuggestionsSubtitle,
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -92,15 +93,15 @@ class _AiSuggestionsPanelState extends ConsumerState<AiSuggestionsPanel> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          _filterChip('Occasion', _occasion, AppConstants.occasions, (value) {
+          _filterChip(AppLocalizations.of(context).occasion, _occasion, AppConstants.occasions, (value) {
             setState(() => _occasion = value);
           }),
           const SizedBox(width: 8),
-          _filterChip('Season', _season, AppConstants.seasons, (value) {
+          _filterChip(AppLocalizations.of(context).season, _season, AppConstants.seasons, (value) {
             setState(() => _season = value);
           }),
           const SizedBox(width: 8),
-          _filterChip('Weather', _weather, AppConstants.weatherOptions, (value) {
+          _filterChip(AppLocalizations.of(context).weather, _weather, AppConstants.weatherOptions, (value) {
             setState(() => _weather = value);
           }),
           if (hasFilter) ...[
@@ -118,8 +119,8 @@ class _AiSuggestionsPanelState extends ConsumerState<AiSuggestionsPanel> {
                   color: AppColors.error.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  'Clear',
+                child: Text(
+                  AppLocalizations.of(context).clear,
                   style: TextStyle(color: AppColors.error, fontSize: 13),
                 ),
               ),
@@ -160,7 +161,9 @@ class _AiSuggestionsPanelState extends ConsumerState<AiSuggestionsPanel> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              selected ?? label,
+              selected == null
+                  ? label
+                  : catalogLabel(AppLocalizations.of(context), selected),
               style: TextStyle(
                 color: selected != null
                     ? AppColors.primary
@@ -199,13 +202,15 @@ class _AiSuggestionsPanelState extends ConsumerState<AiSuggestionsPanel> {
       ref.invalidate(outfitsProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Outfit saved')),
+          SnackBar(content: Text(AppLocalizations.of(context).outfitSaved)),
         );
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not save the outfit: $error')),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).couldNotSaveOutfit('$error')),
+          ),
         );
       }
     }

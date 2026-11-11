@@ -6,6 +6,8 @@ import '../../widgets/common/loading_indicator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/models/outfit.dart';
+import '../../../l10n/catalog_labels.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class OutfitDetailScreen extends ConsumerWidget {
   const OutfitDetailScreen({super.key, required this.id});
@@ -19,7 +21,7 @@ class OutfitDetailScreen extends ConsumerWidget {
       loading: () => const Scaffold(body: LoadingIndicator()),
       error: (_, __) => Scaffold(
         appBar: AppBar(),
-        body: const ErrorView(message: 'Outfit not found'),
+        body: ErrorView(message: AppLocalizations.of(context).outfitNotFound),
       ),
       data: (outfit) => Scaffold(
         appBar: AppBar(
@@ -40,23 +42,28 @@ class OutfitDetailScreen extends ConsumerWidget {
           children: [
             if (outfit.occasion != null || outfit.season != null)
               Text(
-                [outfit.occasion, outfit.season].whereType<String>().join(' · '),
+                [outfit.occasion, outfit.season]
+                    .whereType<String>()
+                    .map((value) => catalogLabel(AppLocalizations.of(context), value))
+                    .join(' · '),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             const SizedBox(height: 8),
             Text(
-              'Worn ${outfit.wearCount} times',
+              AppLocalizations.of(context).wornTimes(outfit.wearCount),
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 20),
             if (outfit.garments.isEmpty)
-              const Text('The garments in this outfit are no longer in the closet')
+              Text(AppLocalizations.of(context).garmentsGone)
             else
               ...outfit.garments.map(
                 (garment) => ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(garment.name),
-                  subtitle: Text(garment.category),
+                  subtitle: Text(
+                    catalogLabel(AppLocalizations.of(context), garment.category),
+                  ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/closet/${garment.id}'),
                 ),
@@ -68,7 +75,7 @@ class OutfitDetailScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               icon: const Icon(Icons.checkroom),
-              label: const Text('Log as Worn Today'),
+              label: Text(AppLocalizations.of(context).logWornToday),
               onPressed: () async {
                 await ref.read(outfitRepositoryProvider).incrementWearCount(id);
                 ref.invalidate(outfitProvider(id));
@@ -77,7 +84,7 @@ class OutfitDetailScreen extends ConsumerWidget {
                 ref.invalidate(wardrobeInsightsProvider);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Logged as worn')),
+                    SnackBar(content: Text(AppLocalizations.of(context).loggedWorn)),
                   );
                 }
               },
@@ -92,36 +99,43 @@ class OutfitDetailScreen extends ConsumerWidget {
     final nameCtrl = TextEditingController(text: outfit.name);
     var occasion = outfit.occasion;
     var season = outfit.season;
+    final l10n = AppLocalizations.of(context);
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setState) => AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text('Edit Outfit'),
+          title: Text(l10n.editOutfit),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: InputDecoration(labelText: l10n.name),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: occasion,
-                decoration: const InputDecoration(labelText: 'Occasion'),
+                decoration: InputDecoration(labelText: l10n.occasion),
                 items: [
                   for (final value in AppConstants.occasions)
-                    DropdownMenuItem(value: value, child: Text(value)),
+                    DropdownMenuItem(
+                      value: value,
+                      child: Text(catalogLabel(l10n, value)),
+                    ),
                 ],
                 onChanged: (value) => setState(() => occasion = value),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: season,
-                decoration: const InputDecoration(labelText: 'Season'),
+                decoration: InputDecoration(labelText: l10n.season),
                 items: [
                   for (final value in AppConstants.seasons)
-                    DropdownMenuItem(value: value, child: Text(value)),
+                    DropdownMenuItem(
+                      value: value,
+                      child: Text(catalogLabel(l10n, value)),
+                    ),
                 ],
                 onChanged: (value) => setState(() => season = value),
               ),
@@ -130,11 +144,11 @@ class OutfitDetailScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ],
         ),
@@ -155,22 +169,21 @@ class OutfitDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Delete Outfit'),
-        content: const Text(
-          'This outfit will be removed, including any days it is planned on.',
-        ),
+        title: Text(l10n.deleteOutfit),
+        content: Text(l10n.deleteOutfitBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text(l10n.delete, style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),

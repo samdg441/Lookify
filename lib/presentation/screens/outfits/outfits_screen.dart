@@ -9,6 +9,7 @@ import '../../widgets/category_filter.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class OutfitsScreen extends ConsumerStatefulWidget {
   const OutfitsScreen({super.key});
@@ -67,7 +68,7 @@ class _OutfitsScreenState extends ConsumerState<OutfitsScreen>
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Text(
-        'Outfits',
+        AppLocalizations.of(context).outfits,
         style: Theme.of(context).textTheme.headlineSmall,
       ),
     );
@@ -96,9 +97,9 @@ class _OutfitsScreenState extends ConsumerState<OutfitsScreen>
             fontSize: 13,
           ),
           dividerColor: Colors.transparent,
-          tabs: const [
-            Tab(text: 'My Outfits'),
-            Tab(text: 'AI Suggestions'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context).myOutfits),
+            Tab(text: AppLocalizations.of(context).aiSuggestions),
           ],
         ),
       ),
@@ -112,6 +113,7 @@ class _MySavedOutfits extends ConsumerWidget {
     final outfitsAsync = ref.watch(outfitsProvider);
     final selectedOccasion = ref.watch(selectedOccasionProvider);
 
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         const SizedBox(height: 12),
@@ -126,17 +128,17 @@ class _MySavedOutfits extends ConsumerWidget {
           child: outfitsAsync.when(
             loading: () => const LoadingIndicator(),
             error: (e, _) => ErrorView(
-              message: 'Failed to load outfits',
+              message: l10n.outfitsFailed,
               onRetry: () => ref.invalidate(outfitsProvider),
             ),
             data: (outfits) => outfits.isEmpty
                 ? EmptyView(
                     icon: Icons.checkroom_outlined,
-                    title: 'No outfits yet',
-                    subtitle: 'Build your first outfit by combining\ngarments from your closet',
+                    title: l10n.noOutfitsYet,
+                    subtitle: l10n.noOutfitsSubtitle,
                     action: ElevatedButton.icon(
                       icon: const Icon(Icons.add),
-                      label: const Text('Build Outfit'),
+                      label: Text(l10n.buildOutfit),
                       onPressed: () => context.push('/outfits/builder'),
                     ),
                   )

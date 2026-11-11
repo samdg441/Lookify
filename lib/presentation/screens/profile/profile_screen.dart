@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../providers/locale_controller.dart';
 import '../../providers/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/auth/auth_session.dart';
 import '../../../domain/auth/credential_rules.dart';
+import '../../../l10n/catalog_labels.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -14,6 +17,8 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
 
+    final l10n = AppLocalizations.of(context);
+    final locale = ref.watch(localeProvider);
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -23,31 +28,51 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 32),
             _buildSection(
               context,
-              title: 'Account',
+              title: l10n.preferences,
+              children: [
+                _tile(
+                  context,
+                  icon: Icons.language_outlined,
+                  label: l10n.language,
+                  trailing: Text(
+                    locale.languageCode == 'en' ? l10n.english : l10n.spanish,
+                    style: const TextStyle(
+                      color: AppColors.textDisabled,
+                      fontSize: 13,
+                    ),
+                  ),
+                  onTap: () => _chooseLanguage(context, ref),
+                ),
+              ],
+            ).animate().fadeIn(delay: 50.ms),
+            const SizedBox(height: 20),
+            _buildSection(
+              context,
+              title: l10n.account,
               children: [
                 _tile(context,
                     icon: Icons.person_outline,
-                    label: 'Edit name',
+                    label: l10n.editName,
                     onTap: () => _editName(context, ref, user)),
                 _tile(context,
                     icon: Icons.lock_reset,
-                    label: 'Reset password',
+                    label: l10n.resetPassword,
                     onTap: () => _sendReset(context, ref, user?.email)),
                 _tile(context,
                     icon: Icons.delete_outline,
-                    label: 'Delete account',
+                    label: l10n.deleteAccount,
                     onTap: () => _deleteAccount(context, ref)),
               ],
             ).animate().fadeIn(delay: 100.ms),
             const SizedBox(height: 20),
             _buildSection(
               context,
-              title: 'About',
+              title: l10n.about,
               children: [
                 _tile(
                   context,
                   icon: Icons.info_outline,
-                  label: 'App Version',
+                  label: l10n.appVersion,
                   trailing: const Text(
                     '1.0.0',
                     style: TextStyle(color: AppColors.textDisabled, fontSize: 13),
@@ -59,8 +84,8 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 32),
             OutlinedButton.icon(
               icon: const Icon(Icons.logout, color: AppColors.error),
-              label: const Text('Sign Out',
-                  style: TextStyle(color: AppColors.error)),
+              label: Text(l10n.signOut,
+                  style: const TextStyle(color: AppColors.error)),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppColors.error),
               ),
@@ -74,7 +99,9 @@ class ProfileScreen extends ConsumerWidget {
 
   Widget _buildAvatar(BuildContext context, AuthSession? user) {
     final rawName = user?.displayName?.trim();
-    final name = (rawName == null || rawName.isEmpty) ? 'User' : rawName;
+    final name = (rawName == null || rawName.isEmpty)
+        ? AppLocalizations.of(context).defaultUserName
+        : rawName;
     final email = user?.email ?? '';
     final initials = name
         .trim()
@@ -156,30 +183,58 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _chooseLanguage(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final selected = await showDialog<Locale>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(l10n.language),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text(l10n.spanish),
+              onTap: () => Navigator.pop(dialogContext, const Locale('es')),
+            ),
+            ListTile(
+              title: Text(l10n.english),
+              onTap: () => Navigator.pop(dialogContext, const Locale('en')),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (selected != null) {
+      await ref.read(localeProvider.notifier).setLocale(selected);
+    }
+  }
+
   Future<void> _editName(
     BuildContext context,
     WidgetRef ref,
     AuthSession? user,
   ) async {
     final controller = TextEditingController(text: user?.displayName ?? '');
+    final l10n = AppLocalizations.of(context);
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Edit name'),
+        title: Text(l10n.editName),
         content: TextField(
           controller: controller,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(labelText: 'Full name'),
+          decoration: InputDecoration(labelText: l10n.fullName),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Save'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -189,20 +244,28 @@ class ProfileScreen extends ConsumerWidget {
     if (saved != true || !context.mounted) return;
     final error = CredentialRules.fullName(name);
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(localizeError(AppLocalizations.of(context), error)),
+        ),
+      );
       return;
     }
     try {
       await ref.read(authGatewayProvider).updateProfile(fullName: name);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Name updated')),
+          SnackBar(content: Text(AppLocalizations.of(context).nameUpdated)),
         );
       }
     } on AuthFailure catch (failure) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
+          SnackBar(
+            content: Text(
+              localizeError(AppLocalizations.of(context), failure.message),
+            ),
+          ),
         );
       }
     }
@@ -218,13 +281,17 @@ class ProfileScreen extends ConsumerWidget {
       await ref.read(authGatewayProvider).sendPasswordReset(email);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password reset email sent')),
+          SnackBar(content: Text(AppLocalizations.of(context).resetEmailSent)),
         );
       }
     } on AuthFailure catch (failure) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
+          SnackBar(
+            content: Text(
+              localizeError(AppLocalizations.of(context), failure.message),
+            ),
+          ),
         );
       }
     }
@@ -232,33 +299,32 @@ class ProfileScreen extends ConsumerWidget {
 
   Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
     final passwordCtrl = TextEditingController();
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Delete account'),
+        title: Text(l10n.deleteAccount),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'This removes your closet, outfits, and calendar. Enter your password to confirm.',
-            ),
+            Text(l10n.deleteAccountBody),
             const SizedBox(height: 12),
             TextField(
               controller: passwordCtrl,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(labelText: l10n.password),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text(l10n.delete, style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -272,23 +338,28 @@ class ProfileScreen extends ConsumerWidget {
     } on AuthFailure catch (failure) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
+          SnackBar(
+            content: Text(
+              localizeError(AppLocalizations.of(context), failure.message),
+            ),
+          ),
         );
       }
     }
   }
 
   void _confirmSignOut(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        title: Text(l10n.signOutTitle),
+        content: Text(l10n.signOutBody),
         actions: [
           TextButton(
             onPressed: () => context.pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -296,8 +367,8 @@ class ProfileScreen extends ConsumerWidget {
               await ref.read(authGatewayProvider).signOut();
               if (context.mounted) context.go('/login');
             },
-            child: const Text('Sign Out',
-                style: TextStyle(color: AppColors.error)),
+            child: Text(l10n.signOut,
+                style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),

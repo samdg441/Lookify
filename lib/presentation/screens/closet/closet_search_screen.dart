@@ -5,6 +5,7 @@ import '../../providers/providers.dart';
 import '../../widgets/garment_card.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../domain/closet/garment_query.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ClosetSearchScreen extends ConsumerStatefulWidget {
   const ClosetSearchScreen({super.key});
@@ -27,14 +28,15 @@ class _ClosetSearchScreenState extends ConsumerState<ClosetSearchScreen> {
   Widget build(BuildContext context) {
     final garmentsAsync = ref.watch(garmentsProvider(null));
 
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: TextField(
           controller: _queryCtrl,
           autofocus: true,
           textInputAction: TextInputAction.search,
-          decoration: const InputDecoration(
-            hintText: 'Search name, brand, color',
+          decoration: InputDecoration(
+            hintText: l10n.searchHint,
             border: InputBorder.none,
           ),
           onChanged: (value) => setState(() => _query = value),
@@ -47,7 +49,7 @@ class _ClosetSearchScreenState extends ConsumerState<ClosetSearchScreen> {
       body: garmentsAsync.when(
         loading: () => const LoadingIndicator(),
         error: (_, __) => ErrorView(
-          message: 'Failed to search the wardrobe',
+          message: l10n.searchFailed,
           onRetry: () => ref.invalidate(garmentsProvider),
         ),
         data: (garments) {
@@ -56,10 +58,10 @@ class _ClosetSearchScreenState extends ConsumerState<ClosetSearchScreen> {
           if (matches.isEmpty) {
             return EmptyView(
               icon: Icons.search_off,
-              title: _query.trim().isEmpty ? 'Nothing to search yet' : 'No matches',
+              title: _query.trim().isEmpty ? l10n.nothingToSearch : l10n.noMatches,
               subtitle: _query.trim().isEmpty
-                  ? 'Add a garment and search it by name, brand, or color'
-                  : 'Try a different name, brand, or color',
+                  ? l10n.nothingToSearchSubtitle
+                  : l10n.noMatchesSubtitle,
             );
           }
           return ListView.separated(
