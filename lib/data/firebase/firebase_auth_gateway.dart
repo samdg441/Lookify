@@ -16,7 +16,7 @@ class FirebaseAuthGateway implements AuthGateway {
 
   @override
   Stream<AuthSession?> watchSession() {
-    return _auth.authStateChanges().map(_sessionOf);
+    return _auth.userChanges().map(_sessionOf);
   }
 
   @override
@@ -67,6 +67,51 @@ class FirebaseAuthGateway implements AuthGateway {
   }
 
   @override
+  Future<void> updateDisplayName(String fullName) async {
+    final user = _auth.currentUser;
+    if (user == null) throw const AuthFailure('You are not signed in');
+    final name = fullName.trim();
+    try {
+      await user.updateDisplayName(name);
+      await _db
+          .collection('users')
+          .doc(user.uid)
+          .set({'fullName': name}, SetOptions(merge: true));
+      await user.reload();
+      // Re-emit so listeners of userChanges() pick up the new name.
+      await _auth.currentUser?.getIdToken(true);
+    } on FirebaseAuthException catch (error) {
+      throw AuthFailure(_message(error));
+    } on FirebaseException {
+      throw const AuthFailure('Could not save your name');
+    }
+  }
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) {
+      throw const AuthFailure('You are not signed in');
+    }
+    try {
+      await user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: email, password: currentPassword),
+      );
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (error) {
+      if (error.code == 'wrong-password' ||
+          error.code == 'invalid-credential') {
+        throw const AuthFailure('Current password is incorrect');
+      }
+      throw AuthFailure(_message(error));
+    }
+  }
+
+  @override
   Future<void> signOut() => _auth.signOut();
 
   AuthSession? _sessionOf(User? user) {
@@ -96,10 +141,12 @@ class FirebaseAuthGateway implements AuthGateway {
       case 'user-not-found':
       case 'invalid-credential':
         return 'Email or password is incorrect';
+      case 'requires-recent-login':
+        return 'Please sign in again and retry';
       case 'network-request-failed':
         return 'Check your internet connection';
       default:
-        return 'Could not complete sign-in';
+        return 'Could not complete the request';
     }
   }
 }

@@ -27,7 +27,7 @@ class ProfileScreen extends ConsumerWidget {
                 _tile(context,
                     icon: Icons.person_outline,
                     label: 'Edit Profile',
-                    onTap: () {}),
+                    onTap: () => context.push('/profile/edit')),
                 _tile(context,
                     icon: Icons.notifications_outlined,
                     label: 'Notifications',
