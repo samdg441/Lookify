@@ -44,7 +44,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
         body: CustomScrollView(
           slivers: [
             SliverAppBar(
-              expandedHeight: 380,
+              expandedHeight: garment.imageUrls.isEmpty ? 220 : 380,
               pinned: true,
               leading: Padding(
                 padding: const EdgeInsets.all(8),
@@ -114,7 +114,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
         child: Center(
           child: Text(
             categoryIcon(garment.category),
-            style: const TextStyle(fontSize: 80),
+            style: const TextStyle(fontSize: 64),
           ),
         ),
       );

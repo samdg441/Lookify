@@ -5,6 +5,7 @@ import '../../providers/providers.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/helpers.dart';
 import '../../../domain/models/outfit.dart';
 import '../../../l10n/catalog_labels.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -60,6 +61,19 @@ class OutfitDetailScreen extends ConsumerWidget {
               ...outfit.garments.map(
                 (garment) => ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      categoryIcon(garment.category),
+                      style: const TextStyle(fontSize: 22),
+                    ),
+                  ),
                   title: Text(garment.name),
                   subtitle: Text(
                     catalogLabel(AppLocalizations.of(context), garment.category),

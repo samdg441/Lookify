@@ -57,10 +57,16 @@ class _OutfitsScreenState extends ConsumerState<OutfitsScreen>
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/outfits/builder'),
-        child: const Icon(Icons.add),
-      ).animate().scale(delay: 300.ms),
+      floatingActionButton: ListenableBuilder(
+        listenable: _tabController,
+        builder: (context, _) {
+          if (_tabController.index != 0) return const SizedBox.shrink();
+          return FloatingActionButton(
+            onPressed: () => context.push('/outfits/builder'),
+            child: const Icon(Icons.add),
+          ).animate().scale(delay: 300.ms);
+        },
+      ),
     );
   }
 

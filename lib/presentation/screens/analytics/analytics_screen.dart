@@ -41,7 +41,7 @@ class AnalyticsScreen extends ConsumerWidget {
                 data: (insights) {
                   final plannedLabel = planned.maybeWhen(
                     data: (count) => '$count',
-                    orElse: () => '…',
+                    orElse: () => '—',
                   );
                   final average = insights.averageCostPerWear;
                   return _buildSummaryCards(
@@ -97,26 +97,29 @@ class AnalyticsScreen extends ConsumerWidget {
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          _summaryCard(context,
-              value: '$total',
-              label: AppLocalizations.of(context).totalItems,
-              icon: Icons.checkroom_outlined,
-              color: AppColors.primary),
-          const SizedBox(width: 12),
-          _summaryCard(context,
-              value: planned,
-              label: AppLocalizations.of(context).outfitsPlanned,
-              icon: Icons.calendar_today_outlined,
-              color: AppColors.info),
-          const SizedBox(width: 12),
-          _summaryCard(context,
-              value: costPerWear,
-              label: AppLocalizations.of(context).costPerWear,
-              icon: Icons.attach_money,
-              color: AppColors.success),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _summaryCard(context,
+                value: '$total',
+                label: AppLocalizations.of(context).totalItems,
+                icon: Icons.checkroom_outlined,
+                color: AppColors.primary),
+            const SizedBox(width: 12),
+            _summaryCard(context,
+                value: planned,
+                label: AppLocalizations.of(context).outfitsPlanned,
+                icon: Icons.calendar_today_outlined,
+                color: AppColors.info),
+            const SizedBox(width: 12),
+            _summaryCard(context,
+                value: costPerWear,
+                label: AppLocalizations.of(context).costPerWear,
+                icon: Icons.attach_money,
+                color: AppColors.success),
+          ],
+        ),
       ).animate().fadeIn().slideY(begin: 0.1),
     );
   }
