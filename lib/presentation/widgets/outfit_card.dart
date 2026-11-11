@@ -48,7 +48,7 @@ class OutfitCard extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         child: Container(
           color: AppColors.surfaceVariant,
-          child: const Center(
+          child: Center(
             child: Icon(Icons.checkroom_outlined,
                 color: AppColors.textDisabled, size: 36),
           ),
@@ -114,7 +114,7 @@ class OutfitCard extends StatelessWidget {
                   ),
                   child: Text(
                     outfit.occasion!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.primary,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -182,7 +182,7 @@ class OutfitSuggestionCard extends StatelessWidget {
                   color: AppColors.primary.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.auto_awesome,
+                child: Icon(Icons.auto_awesome,
                     color: AppColors.primary, size: 18),
               ),
               const SizedBox(width: 12),
@@ -194,7 +194,7 @@ class OutfitSuggestionCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleSmall),
                     Text(
                       occasion,
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: AppColors.primary, fontSize: 12),
                     ),
                   ],
@@ -202,7 +202,7 @@ class OutfitSuggestionCard extends StatelessWidget {
               ),
               if (onSave != null)
                 IconButton(
-                  icon: const Icon(Icons.bookmark_outline,
+                  icon: Icon(Icons.bookmark_outline,
                       color: AppColors.primary),
                   onPressed: onSave,
                 ),
@@ -221,7 +221,7 @@ class OutfitSuggestionCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.lightbulb_outline,
+                Icon(Icons.lightbulb_outline,
                     color: AppColors.warning, size: 16),
                 const SizedBox(width: 8),
                 Expanded(

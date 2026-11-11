@@ -105,7 +105,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon:
-            const Icon(Icons.lock_outline, color: AppColors.textDisabled),
+            Icon(Icons.lock_outline, color: AppColors.textDisabled),
         suffixIcon: IconButton(
           icon: Icon(
             _obscure
@@ -125,7 +125,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         width: 20,
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          color: AppColors.background,
+          color: AppColors.onPrimary,
         ),
       );
 

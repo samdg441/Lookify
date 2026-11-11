@@ -89,23 +89,23 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       },
       calendarStyle: CalendarStyle(
         defaultTextStyle:
-            const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+            TextStyle(color: AppColors.textPrimary, fontSize: 14),
         weekendTextStyle:
-            const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            TextStyle(color: AppColors.textSecondary, fontSize: 14),
         outsideDaysVisible: false,
         todayDecoration: BoxDecoration(
           color: AppColors.primary.withOpacity(0.2),
           shape: BoxShape.circle,
         ),
-        todayTextStyle: const TextStyle(
+        todayTextStyle: TextStyle(
             color: AppColors.primary, fontWeight: FontWeight.w600),
-        selectedDecoration: const BoxDecoration(
+        selectedDecoration: BoxDecoration(
           color: AppColors.primary,
           shape: BoxShape.circle,
         ),
-        selectedTextStyle: const TextStyle(
-            color: AppColors.background, fontWeight: FontWeight.w600),
-        markerDecoration: const BoxDecoration(
+        selectedTextStyle: TextStyle(
+            color: AppColors.onPrimary, fontWeight: FontWeight.w600),
+        markerDecoration: BoxDecoration(
           color: AppColors.primary,
           shape: BoxShape.circle,
         ),
@@ -115,18 +115,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       headerStyle: HeaderStyle(
         titleCentered: true,
         formatButtonVisible: false,
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           color: AppColors.textPrimary,
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
-        leftChevronIcon: const Icon(
+        leftChevronIcon: Icon(
             Icons.chevron_left, color: AppColors.textSecondary),
-        rightChevronIcon: const Icon(
+        rightChevronIcon: Icon(
             Icons.chevron_right, color: AppColors.textSecondary),
         headerPadding: const EdgeInsets.symmetric(vertical: 8),
       ),
-      daysOfWeekStyle: const DaysOfWeekStyle(
+      daysOfWeekStyle: DaysOfWeekStyle(
         weekdayStyle:
             TextStyle(color: AppColors.textDisabled, fontSize: 12),
         weekendStyle:
@@ -159,7 +159,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     color: AppColors.primary.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Today',
                     style: TextStyle(
                         color: AppColors.primary,
@@ -171,7 +171,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               const Spacer(),
               if (entry != null)
                 IconButton(
-                  icon: const Icon(Icons.delete_outline,
+                  icon: Icon(Icons.delete_outline,
                       color: AppColors.error, size: 20),
                   onPressed: () => _removeEntry(context),
                 ),
@@ -203,7 +203,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               color: AppColors.surfaceVariant,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.checkroom_outlined,
+            child: Icon(Icons.checkroom_outlined,
                 color: AppColors.primary),
           ),
           const SizedBox(width: 16),
@@ -228,7 +228,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.swap_horiz, color: AppColors.textSecondary),
+            icon: Icon(Icons.swap_horiz, color: AppColors.textSecondary),
             onPressed: () => _pickOutfit(context),
           ),
         ],
@@ -327,7 +327,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 itemBuilder: (_, i) => ListTile(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: AppColors.border),
+                    side: BorderSide(color: AppColors.border),
                   ),
                   tileColor: AppColors.card,
                   title: Text(outfits[i].name),

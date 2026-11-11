@@ -155,13 +155,17 @@ class VirtualClosetApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final isDark = ref.watch(isDarkModeProvider);
     ref.listen(authStateProvider, (_, next) {
       ref.read(crashReporterProvider).setUser(next.asData?.value?.id);
     });
 
     return MaterialApp.router(
       title: 'Virtual Closet',
-      theme: AppTheme.dark,
+      // AppColors.isDark is already updated by the notifier at this point.
+      key: ValueKey(isDark),
+      theme: isDark ? AppTheme.dark : AppTheme.light,
+      themeAnimationDuration: Duration.zero,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );
