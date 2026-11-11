@@ -7,6 +7,7 @@ import '../../providers/providers.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/helpers.dart';
+import '../../../domain/models/garment.dart';
 
 class GarmentDetailScreen extends ConsumerStatefulWidget {
   const GarmentDetailScreen({super.key, required this.id});
@@ -59,6 +60,16 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
                   child: CircleAvatar(
                     backgroundColor: AppColors.background.withOpacity(0.8),
                     child: IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      onPressed: () => context.push('/closet/${widget.id}/edit'),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: CircleAvatar(
+                    backgroundColor: AppColors.background.withOpacity(0.8),
+                    child: IconButton(
                       icon: const Icon(Icons.delete_outline, size: 18),
                       onPressed: () => _confirmDelete(context, ref),
                     ),
@@ -93,8 +104,8 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
     );
   }
 
-  Widget _buildPhotoGallery(garment) {
-    final photos = garment.imageUrls as List<String>;
+  Widget _buildPhotoGallery(Garment garment) {
+    final photos = garment.imageUrls;
     if (photos.isEmpty) {
       return Container(
         color: AppColors.surfaceVariant,
@@ -148,7 +159,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
     );
   }
 
-  Widget _buildTitle(BuildContext context, garment) {
+  Widget _buildTitle(BuildContext context, Garment garment) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -189,7 +200,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
     ).animate().fadeIn().slideY(begin: 0.1);
   }
 
-  Widget _buildStats(BuildContext context, garment) {
+  Widget _buildStats(BuildContext context, Garment garment) {
     return Row(
       children: [
         _statCard(context,
@@ -243,7 +254,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
     );
   }
 
-  Widget _buildAttributes(BuildContext context, garment) {
+  Widget _buildAttributes(BuildContext context, Garment garment) {
     final attrs = <String, String?>{
       'Color': garment.color,
       'Season': garment.season,
@@ -319,6 +330,8 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
         onPressed: () async {
           await ref.read(garmentRepositoryProvider).incrementWearCount(id);
           ref.invalidate(garmentProvider(id));
+          ref.invalidate(garmentsProvider);
+          ref.invalidate(wardrobeInsightsProvider);
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Logged as worn!')),
@@ -345,8 +358,11 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
           TextButton(
             onPressed: () async {
               context.pop();
-              await ref.read(garmentRepositoryProvider).deleteGarment(widget.id);
+              await ref.read(removeGarmentProvider).call(widget.id);
               ref.invalidate(garmentsProvider);
+              ref.invalidate(outfitsProvider);
+              ref.invalidate(wardrobeInsightsProvider);
+              ref.invalidate(calendarEntriesProvider);
               if (context.mounted) context.pop();
             },
             child: const Text('Delete',

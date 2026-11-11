@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../domain/closet/outfit_membership.dart';
 import '../../domain/closet/outfit_store.dart';
 import '../../domain/models/garment.dart';
 import '../../domain/models/outfit.dart';
@@ -85,6 +86,49 @@ class FirebaseOutfitStore implements OutfitStore {
       'updatedAt': FieldValue.serverTimestamp(),
     });
     return getOutfit(id);
+  }
+
+  @override
+  Future<void> updateOutfit({
+    required String id,
+    required String name,
+    String? occasion,
+    String? season,
+    String? notes,
+  }) async {
+    await _outfits.doc(id).update({
+      'name': name,
+      'occasion': occasion,
+      'season': season,
+      'notes': notes,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  @override
+  Future<void> detachGarment(String garmentId) async {
+    final snap =
+        await _outfits.where('garmentIds', arrayContains: garmentId).get();
+    final plans = planGarmentRemoval(
+      outfits: [
+        for (final doc in snap.docs)
+          (
+            id: doc.id,
+            garmentIds: List<String>.from(doc.data()['garmentIds'] ?? const []),
+          ),
+      ],
+      garmentId: garmentId,
+    );
+    for (final plan in plans) {
+      if (plan.change == OutfitMembershipChange.delete) {
+        await deleteOutfit(plan.outfitId);
+      } else {
+        await _outfits.doc(plan.outfitId).update({
+          'garmentIds': plan.garmentIds,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    }
   }
 
   @override

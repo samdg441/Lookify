@@ -18,4 +18,15 @@ abstract interface class AuthGateway {
   });
 
   Future<void> signOut();
+
+  Future<void> sendPasswordReset(String email);
+
+  Future<void> updateProfile({required String fullName});
+
+  /// Confirms [password] for the signed-in user before a destructive action.
+  Future<void> reauthenticate({required String password});
+
+  /// Deletes the auth user and the profile document. Closet data is removed
+  /// by the caller first, because auth has no cascade.
+  Future<void> deleteAccount();
 }

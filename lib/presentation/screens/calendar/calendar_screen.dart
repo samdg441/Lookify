@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/providers.dart';
@@ -345,12 +344,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
 
     if (selected != null && mounted) {
-      await ref.read(calendarRepositoryProvider).setOutfitForDate(
+      await ref.read(scheduleOutfitProvider).call(
             date: _selectedDay,
             outfitId: selected,
           );
       ref.invalidate(calendarEntriesProvider);
       ref.invalidate(calendarEntryForDateProvider(_selectedDay));
+      ref.invalidate(plannedOutfitsCountProvider);
+      ref.invalidate(outfitsProvider);
+      ref.invalidate(garmentsProvider);
+      ref.invalidate(wardrobeInsightsProvider);
     }
   }
 
@@ -360,5 +363,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         .removeEntryForDate(_selectedDay);
     ref.invalidate(calendarEntriesProvider);
     ref.invalidate(calendarEntryForDateProvider(_selectedDay));
+    ref.invalidate(plannedOutfitsCountProvider);
   }
 }

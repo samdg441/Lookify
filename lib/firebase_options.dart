@@ -10,7 +10,8 @@ class DefaultFirebaseOptions {
         return android;
       default:
         throw UnsupportedError(
-          'Firebase is not configured for this platform.',
+          'Lookify is configured for Android and web. '
+          'This platform has no Firebase app.',
         );
     }
   }

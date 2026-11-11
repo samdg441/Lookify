@@ -7,15 +7,15 @@ import '../../widgets/garment_card.dart';
 import '../../widgets/category_filter.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../domain/models/garment.dart';
 
 class ClosetScreen extends ConsumerWidget {
   const ClosetScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final garmentsAsync = ref.watch(garmentsProvider);
-    final selectedCategory = ref.watch(selectedCategoryProvider);
+    final selectedCategory = ref.watch(closetCategoryProvider);
+    final garmentsAsync = ref.watch(garmentsProvider(selectedCategory));
 
     return Scaffold(
       body: SafeArea(
@@ -28,7 +28,7 @@ class ClosetScreen extends ConsumerWidget {
               categories: AppConstants.garmentCategories,
               selected: selectedCategory,
               onSelected: (cat) =>
-                  ref.read(selectedCategoryProvider.notifier).state = cat,
+                  ref.read(closetCategoryProvider.notifier).state = cat,
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -82,10 +82,9 @@ class ClosetScreen extends ConsumerWidget {
               ),
               Consumer(
                 builder: (_, ref, __) {
-                  final count = ref
-                      .watch(garmentsProvider)
-                      .valueOrNull
-                      ?.length;
+                  final category = ref.watch(closetCategoryProvider);
+                  final count =
+                      ref.watch(garmentsProvider(category)).valueOrNull?.length;
                   return Text(
                     count != null ? '$count items' : '',
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -104,7 +103,7 @@ class ClosetScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildGrid(BuildContext context, List garments) {
+  Widget _buildGrid(BuildContext context, List<Garment> garments) {
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

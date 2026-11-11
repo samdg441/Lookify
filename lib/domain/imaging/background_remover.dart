@@ -1,9 +1,9 @@
-import 'dart:io';
+import 'local_photo.dart';
 
 abstract interface class BackgroundRemover {
   bool get isSupported;
 
-  Future<File> removeBackground(File image);
+  Future<LocalPhoto> removeBackground(LocalPhoto image);
 
-  Future<List<File>> removeBackgroundBatch(List<File> images);
+  Future<List<LocalPhoto>> removeBackgroundBatch(List<LocalPhoto> images);
 }

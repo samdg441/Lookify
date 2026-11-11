@@ -14,6 +14,8 @@ import 'presentation/screens/main_navigation_screen.dart';
 import 'presentation/screens/closet/closet_screen.dart';
 import 'presentation/screens/closet/garment_detail_screen.dart';
 import 'presentation/screens/closet/add_garment_screen.dart';
+import 'presentation/screens/closet/closet_search_screen.dart';
+import 'presentation/screens/outfits/outfit_detail_screen.dart';
 import 'presentation/screens/outfits/outfits_screen.dart';
 import 'presentation/screens/outfits/outfit_builder_screen.dart';
 import 'presentation/screens/calendar/calendar_screen.dart';
@@ -91,10 +93,24 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (_, __) => const AddGarmentScreen(),
               ),
               GoRoute(
+                path: 'search',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (_, __) => const ClosetSearchScreen(),
+              ),
+              GoRoute(
                 path: ':id',
                 parentNavigatorKey: _rootNavigatorKey,
                 builder: (_, state) =>
                     GarmentDetailScreen(id: state.pathParameters['id']!),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (_, state) => AddGarmentScreen(
+                      garmentId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -108,6 +124,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'builder',
                 parentNavigatorKey: _rootNavigatorKey,
                 builder: (_, __) => const OutfitBuilderScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (_, state) =>
+                    OutfitDetailScreen(id: state.pathParameters['id']!),
               ),
             ],
           ),

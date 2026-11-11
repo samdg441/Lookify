@@ -1,22 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
-import 'closet/closet_screen.dart';
-import 'outfits/outfits_screen.dart';
-import 'calendar/calendar_screen.dart';
-import 'analytics/analytics_screen.dart';
-import 'profile/profile_screen.dart';
 
-class MainNavigationScreen extends StatefulWidget {
+class MainNavigationScreen extends StatelessWidget {
   const MainNavigationScreen({super.key, required this.child});
   final Widget child;
-
-  @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
-}
-
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
 
   static const _tabs = [
     _NavItem(
@@ -51,34 +39,36 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ),
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: _buildBottomNav(context),
-    );
+  int _indexFor(String location) {
+    if (location.startsWith('/outfits')) return 1;
+    if (location.startsWith('/calendar')) return 2;
+    if (location.startsWith('/analytics')) return 3;
+    if (location.startsWith('/profile')) return 4;
+    return 0;
   }
 
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.border, width: 0.5),
+  @override
+  Widget build(BuildContext context) {
+    final currentIndex = _indexFor(GoRouterState.of(context).uri.path);
+    return Scaffold(
+      body: child,
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(color: AppColors.border, width: 0.5),
+          ),
         ),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-          context.go(_tabs[index].route);
-        },
-        items: _tabs
-            .map((tab) => BottomNavigationBarItem(
-                  icon: Icon(tab.icon),
-                  activeIcon: Icon(tab.activeIcon),
-                  label: tab.label,
-                ))
-            .toList(),
+        child: BottomNavigationBar(
+          currentIndex: currentIndex,
+          onTap: (index) => context.go(_tabs[index].route),
+          items: _tabs
+              .map((tab) => BottomNavigationBarItem(
+                    icon: Icon(tab.icon),
+                    activeIcon: Icon(tab.activeIcon),
+                    label: tab.label,
+                  ))
+              .toList(),
+        ),
       ),
     );
   }

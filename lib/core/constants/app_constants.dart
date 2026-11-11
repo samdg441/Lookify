@@ -30,6 +30,13 @@ class AppConstants {
     'Date Night',
   ];
 
+  static const List<String> weatherOptions = [
+    'Hot',
+    'Mild',
+    'Cold',
+    'Rainy',
+  ];
+
   // Seasons
   static const List<String> seasons = [
     'Spring',

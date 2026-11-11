@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../domain/closet/calendar_store.dart';
 import '../../domain/models/calendar_entry.dart';
+import '../../domain/models/garment.dart';
 import '../../domain/models/outfit.dart';
 import 'firestore_mappers.dart';
 
@@ -24,6 +25,9 @@ class FirebaseCalendarStore implements CalendarStore {
   CollectionReference<Map<String, dynamic>> get _outfits =>
       _db.collection('users').doc(_userId).collection('outfits');
 
+  CollectionReference<Map<String, dynamic>> get _garments =>
+      _db.collection('users').doc(_userId).collection('garments');
+
   @override
   Future<List<CalendarEntry>> getEntriesForMonth(int year, int month) async {
     final start = _dateId(DateTime(year, month, 1));
@@ -33,14 +37,17 @@ class FirebaseCalendarStore implements CalendarStore {
         .startAt([start])
         .endAt([end])
         .get();
-    return Future.wait(snap.docs.map(_entryFromDoc));
+    final wardrobe = await _wardrobeById();
+    return Future.wait(
+      snap.docs.map((doc) => _entryFromDoc(doc, wardrobe)),
+    );
   }
 
   @override
   Future<CalendarEntry?> getEntryForDate(DateTime date) async {
     final doc = await _calendar.doc(_dateId(date)).get();
     if (!doc.exists) return null;
-    return _entryFromDoc(doc);
+    return _entryFromDoc(doc, await _wardrobeById());
   }
 
   @override
@@ -73,15 +80,54 @@ class FirebaseCalendarStore implements CalendarStore {
     await _calendar.doc(_dateId(date)).delete();
   }
 
+  @override
+  Future<int> countEntries() async {
+    final aggregate = await _calendar.count().get();
+    return aggregate.count ?? 0;
+  }
+
+  @override
+  Future<void> deleteAll() async {
+    final snap = await _calendar.get();
+    var batch = _db.batch();
+    var pending = 0;
+    for (final doc in snap.docs) {
+      batch.delete(doc.reference);
+      pending++;
+      if (pending == 400) {
+        await batch.commit();
+        batch = _db.batch();
+        pending = 0;
+      }
+    }
+    if (pending > 0) await batch.commit();
+  }
+
+  Future<Map<String, Garment>> _wardrobeById() async {
+    final snap = await _garments.get();
+    final garments = await Future.wait(snap.docs.map(garmentFromDoc));
+    return {for (final garment in garments) garment.id: garment};
+  }
+
   Future<CalendarEntry> _entryFromDoc(
     DocumentSnapshot<Map<String, dynamic>> doc,
+    Map<String, Garment> wardrobe,
   ) async {
     final data = doc.data() ?? {};
     final outfitId = data['outfitId'] as String? ?? '';
     Outfit? outfit;
     if (outfitId.isNotEmpty) {
       final outfitDoc = await _outfits.doc(outfitId).get();
-      if (outfitDoc.exists) outfit = outfitFromDoc(outfitDoc);
+      if (outfitDoc.exists) {
+        final ids = List<String>.from(outfitDoc.data()?['garmentIds'] ?? const []);
+        outfit = outfitFromDoc(
+          outfitDoc,
+          garments: [
+            for (final garmentId in ids)
+              if (wardrobe.containsKey(garmentId)) wardrobe[garmentId]!,
+          ],
+        );
+      }
     }
     final createdAt = firestoreDate(data['createdAt']) ?? DateTime.now();
     return CalendarEntry(

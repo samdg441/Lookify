@@ -16,7 +16,8 @@ class AnalyticsScreen extends ConsumerWidget {
     final categoryStats = ref.watch(categoryStatsProvider);
     final mostWorn = ref.watch(mostWornProvider);
     final leastWorn = ref.watch(leastWornProvider);
-    final wardrobeSize = ref.watch(wardrobeSizeProvider);
+    final wardrobeSize = ref.watch(wardrobeInsightsProvider);
+    final planned = ref.watch(plannedOutfitsCountProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -35,7 +36,19 @@ class AnalyticsScreen extends ConsumerWidget {
               child: wardrobeSize.when(
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
-                data: (total) => _buildSummaryCards(context, total),
+                data: (insights) {
+                  final plannedLabel = planned.maybeWhen(
+                    data: (count) => '$count',
+                    orElse: () => '…',
+                  );
+                  final average = insights.averageCostPerWear;
+                  return _buildSummaryCards(
+                    context,
+                    insights.total,
+                    plannedLabel,
+                    average == null ? '—' : formatPrice(average),
+                  );
+                },
               ),
             ),
             SliverToBoxAdapter(
@@ -74,7 +87,12 @@ class AnalyticsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryCards(BuildContext context, int total) {
+  Widget _buildSummaryCards(
+    BuildContext context,
+    int total,
+    String planned,
+    String costPerWear,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -86,13 +104,13 @@ class AnalyticsScreen extends ConsumerWidget {
               color: AppColors.primary),
           const SizedBox(width: 12),
           _summaryCard(context,
-              value: '0',
+              value: planned,
               label: 'Outfits Planned',
               icon: Icons.calendar_today_outlined,
               color: AppColors.info),
           const SizedBox(width: 12),
           _summaryCard(context,
-              value: '—',
+              value: costPerWear,
               label: 'Cost / Wear',
               icon: Icons.attach_money,
               color: AppColors.success),

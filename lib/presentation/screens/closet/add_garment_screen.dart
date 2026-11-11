@@ -6,12 +6,17 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/providers.dart';
+import '../../widgets/option_chips.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/file_utils.dart';
+import '../../../domain/imaging/local_photo.dart';
+import '../../../domain/models/garment.dart';
 
 class AddGarmentScreen extends ConsumerStatefulWidget {
-  const AddGarmentScreen({super.key});
+  const AddGarmentScreen({super.key, this.garmentId});
+
+  final String? garmentId;
 
   @override
   ConsumerState<AddGarmentScreen> createState() => _AddGarmentScreenState();
@@ -33,6 +38,9 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
   bool _saving = false;
   bool _removeBackground = true;
   bool _processingImages = false;
+  bool _hydrated = false;
+
+  bool get _editing => widget.garmentId != null;
 
   @override
   void dispose() {
@@ -84,7 +92,10 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
     if (_removeBackground && bgService.isSupported) {
       setState(() => _processingImages = true);
       final original = picked;
-      picked = await bgService.removeBackgroundBatch(picked);
+      final processed = await bgService.removeBackgroundBatch(
+        picked.map((file) => LocalPhoto(file.path)).toList(),
+      );
+      picked = processed.map((photo) => File(photo.path)).toList();
       if (!mounted) return;
       setState(() => _processingImages = false);
 
@@ -121,25 +132,47 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
+    final name = _nameCtrl.text.trim();
+    final brand = _brandCtrl.text.trim().isEmpty ? null : _brandCtrl.text.trim();
+    final notes = _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim();
+    final price = double.tryParse(_priceCtrl.text);
     try {
-      await ref.read(garmentRepositoryProvider).createGarment(
-            name: _nameCtrl.text.trim(),
-            category: _category,
-            brand: _brandCtrl.text.trim().isEmpty ? null : _brandCtrl.text.trim(),
-            color: _color,
-            season: _season,
-            occasion: _occasion,
-            price: double.tryParse(_priceCtrl.text),
-            currency: _currency,
-            notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-            imageFiles: _imageFiles,
-          );
+      final store = ref.read(garmentRepositoryProvider);
+      if (_editing) {
+        await store.updateGarment(
+          id: widget.garmentId!,
+          name: name,
+          category: _category,
+          brand: brand,
+          color: _color,
+          season: _season,
+          occasion: _occasion,
+          price: price,
+          currency: _currency,
+          notes: notes,
+        );
+        ref.invalidate(garmentProvider(widget.garmentId!));
+      } else {
+        await store.createGarment(
+          name: name,
+          category: _category,
+          brand: brand,
+          color: _color,
+          season: _season,
+          occasion: _occasion,
+          price: price,
+          currency: _currency,
+          notes: notes,
+          photos: [for (final file in _imageFiles) LocalPhoto(file.path)],
+        );
+      }
       ref.invalidate(garmentsProvider);
+      ref.invalidate(wardrobeInsightsProvider);
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('Could not save the garment: $e')),
         );
       }
     } finally {
@@ -147,11 +180,42 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
     }
   }
 
+  void _hydrate(Garment garment) {
+    if (_hydrated) return;
+    _hydrated = true;
+    _nameCtrl.text = garment.name;
+    _brandCtrl.text = garment.brand ?? '';
+    _priceCtrl.text = garment.price == null ? '' : garment.price!.toString();
+    _notesCtrl.text = garment.notes ?? '';
+    _category = garment.category;
+    _color = garment.color;
+    _season = garment.season;
+    _occasion = garment.occasion;
+    _currency = garment.currency;
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_editing) {
+      final existing = ref.watch(garmentProvider(widget.garmentId!));
+      if (existing.isLoading && !_hydrated) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+      if (existing.hasError && !_hydrated) {
+        return Scaffold(
+          appBar: AppBar(),
+          body: const Center(child: Text('Garment not found')),
+        );
+      }
+      final garment = existing.asData?.value;
+      if (garment != null) _hydrate(garment);
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Garment'),
+        title: Text(_editing ? 'Edit Garment' : 'Add Garment'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
@@ -177,12 +241,14 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            _buildImagePicker().animate().fadeIn(),
-            if (ref.read(backgroundRemovalServiceProvider).isSupported) ...[
-              const SizedBox(height: 12),
-              _buildBackgroundRemovalToggle().animate().fadeIn(delay: 50.ms),
+            if (!_editing) ...[
+              _buildImagePicker().animate().fadeIn(),
+              if (ref.read(backgroundRemovalServiceProvider).isSupported) ...[
+                const SizedBox(height: 12),
+                _buildBackgroundRemovalToggle().animate().fadeIn(delay: 50.ms),
+              ],
+              const SizedBox(height: 28),
             ],
-            const SizedBox(height: 28),
             _buildBasicInfo().animate().fadeIn(delay: 100.ms),
             const SizedBox(height: 20),
             _buildCategorySection().animate().fadeIn(delay: 150.ms),
@@ -368,19 +434,21 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
   }
 
   Widget _buildBackgroundRemovalToggle() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+    return Material(
+      color: AppColors.surfaceVariant,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border, width: 0.5),
+        side: const BorderSide(color: AppColors.border, width: 0.5),
       ),
-      child: SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Remove background'),
-        subtitle: const Text('Applies on-device to new photos'),
-        value: _removeBackground,
-        onChanged: (val) => setState(() => _removeBackground = val),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        child: SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Remove background'),
+          subtitle: const Text('Applies on-device to new photos'),
+          value: _removeBackground,
+          onChanged: (val) => setState(() => _removeBackground = val),
+        ),
       ),
     );
   }
@@ -438,45 +506,40 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
   }
 
   Widget _buildCategorySection() {
-    return _buildChipGroup(
+    return OptionChips(
       label: 'Category *',
       items: AppConstants.garmentCategories,
       selected: [_category],
       onSelected: (val) => setState(() => _category = val),
-      single: true,
     );
   }
 
   Widget _buildColorSection() {
-    return _buildChipGroup(
+    return OptionChips(
       label: 'Color',
       items: AppConstants.garmentColors,
       selected: _color != null ? [_color!] : [],
-      onSelected: (val) =>
-          setState(() => _color = _color == val ? null : val),
-      single: true,
+      onSelected: (val) => setState(() => _color = _color == val ? null : val),
     );
   }
 
   Widget _buildSeasonSection() {
-    return _buildChipGroup(
+    return OptionChips(
       label: 'Season',
       items: AppConstants.seasons,
       selected: _season != null ? [_season!] : [],
       onSelected: (val) =>
           setState(() => _season = _season == val ? null : val),
-      single: true,
     );
   }
 
   Widget _buildOccasionSection() {
-    return _buildChipGroup(
+    return OptionChips(
       label: 'Occasion',
       items: AppConstants.occasions,
       selected: _occasion != null ? [_occasion!] : [],
       onSelected: (val) =>
           setState(() => _occasion = _occasion == val ? null : val),
-      single: true,
     );
   }
 
@@ -489,57 +552,6 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
         labelText: 'Notes',
         alignLabelWithHint: true,
       ),
-    );
-  }
-
-  Widget _buildChipGroup({
-    required String label,
-    required List<String> items,
-    required List<String> selected,
-    required ValueChanged<String> onSelected,
-    bool single = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.labelLarge),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: items.map((item) {
-            final isSelected = selected.contains(item);
-            return GestureDetector(
-              onTap: () => onSelected(item),
-              child: AnimatedContainer(
-                duration: 150.ms,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color:
-                        isSelected ? AppColors.primary : AppColors.border,
-                    width: 0.5,
-                  ),
-                ),
-                child: Text(
-                  item,
-                  style: TextStyle(
-                    color: isSelected
-                        ? AppColors.background
-                        : AppColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
     );
   }
 }

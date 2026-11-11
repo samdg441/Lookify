@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import '../../core/constants/app_constants.dart';
+import '../imaging/local_photo.dart';
 import '../models/garment.dart';
 import 'wardrobe_insights.dart';
 
@@ -19,7 +18,20 @@ abstract interface class GarmentStore {
     double? price,
     String currency = AppConstants.defaultCurrency,
     String? notes,
-    List<File> imageFiles = const [],
+    List<LocalPhoto> photos = const [],
+  });
+
+  Future<void> updateGarment({
+    required String id,
+    required String name,
+    required String category,
+    String? brand,
+    String? color,
+    String? season,
+    String? occasion,
+    double? price,
+    String currency = AppConstants.defaultCurrency,
+    String? notes,
   });
 
   Future<void> deleteGarment(String id);

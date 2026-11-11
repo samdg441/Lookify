@@ -60,6 +60,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _sendReset() async {
+    final emailError = CredentialRules.email(_emailCtrl.text);
+    if (emailError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(emailError)),
+      );
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      await ref.read(authGatewayProvider).sendPasswordReset(_emailCtrl.text);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password reset email sent')),
+        );
+      }
+    } on AuthFailure catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +102,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 _buildHeader(),
                 const SizedBox(height: 48),
                 _buildFields(),
-                const SizedBox(height: 32),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _loading ? null : _sendReset,
+                    child: const Text('Forgot password?'),
+                  ),
+                ),
                 _buildSignInButton(),
                 const SizedBox(height: 24),
                 _buildDivider(),

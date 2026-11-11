@@ -10,6 +10,7 @@ import '../../core/utils/bounded_concurrency.dart';
 import '../../core/utils/file_utils.dart';
 import '../../domain/closet/garment_store.dart';
 import '../../domain/closet/wardrobe_insights.dart';
+import '../../domain/imaging/local_photo.dart';
 import '../../domain/models/garment.dart';
 import 'firestore_mappers.dart';
 
@@ -68,7 +69,7 @@ class FirebaseGarmentStore implements GarmentStore {
     double? price,
     String currency = AppConstants.defaultCurrency,
     String? notes,
-    List<File> imageFiles = const [],
+    List<LocalPhoto> photos = const [],
   }) async {
     final id = _uuid.v4();
     final doc = _garments.doc(id);
@@ -89,13 +90,13 @@ class FirebaseGarmentStore implements GarmentStore {
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    if (imageFiles.isNotEmpty) {
+    if (photos.isNotEmpty) {
       final uploaded = <String>[];
       try {
         final images = await mapWithConcurrency(
-          imageFiles,
-          (file) async {
-            final path = await _uploadImage(file);
+          photos,
+          (photo) async {
+            final path = await _uploadImage(File(photo.path));
             uploaded.add(path);
             return path;
           },
@@ -108,8 +109,8 @@ class FirebaseGarmentStore implements GarmentStore {
           ],
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        for (final file in imageFiles) {
-          await deleteFileQuietly(file);
+        for (final photo in photos) {
+          await deleteFileQuietly(File(photo.path));
         }
       } catch (_) {
         await doc.delete();
@@ -119,6 +120,33 @@ class FirebaseGarmentStore implements GarmentStore {
     }
 
     return getGarment(id);
+  }
+
+  @override
+  Future<void> updateGarment({
+    required String id,
+    required String name,
+    required String category,
+    String? brand,
+    String? color,
+    String? season,
+    String? occasion,
+    double? price,
+    String currency = AppConstants.defaultCurrency,
+    String? notes,
+  }) async {
+    await _garments.doc(id).update({
+      'name': name,
+      'category': category,
+      'brand': brand,
+      'color': color,
+      'season': season,
+      'occasion': occasion,
+      'price': price,
+      'currency': currency,
+      'notes': notes,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   @override
@@ -146,17 +174,11 @@ class FirebaseGarmentStore implements GarmentStore {
         (doc) => garmentFromDoc(doc, storage: _storage, resolveImages: false),
       ),
     );
-
-    final counts = <String, int>{};
-    for (final garment in garments) {
-      counts[garment.category] = (counts[garment.category] ?? 0) + 1;
-    }
-
-    final byWear = [...garments]
-      ..sort((a, b) => b.wearCount.compareTo(a.wearCount));
-    final mostIds = byWear.take(limit).map((g) => g.id).toSet();
-    final leastIds = byWear.reversed.take(limit).map((g) => g.id).toSet();
-    final highlighted = mostIds.union(leastIds);
+    final summary = summarizeWardrobe(garments, limit: limit);
+    final highlighted = {
+      for (final garment in [...summary.mostWorn, ...summary.leastWorn])
+        garment.id,
+    };
 
     final resolved = <String, Garment>{};
     await Future.wait(
@@ -165,17 +187,18 @@ class FirebaseGarmentStore implements GarmentStore {
       }),
     );
 
-    List<Garment> pick(Iterable<Garment> source) {
+    List<Garment> pick(List<Garment> source) {
       return [
         for (final garment in source) resolved[garment.id] ?? garment,
       ];
     }
 
     return WardrobeInsights(
-      total: garments.length,
-      categoryCounts: counts,
-      mostWorn: pick(byWear.take(limit)),
-      leastWorn: pick(byWear.reversed.take(limit)),
+      total: summary.total,
+      categoryCounts: summary.categoryCounts,
+      mostWorn: pick(summary.mostWorn),
+      leastWorn: pick(summary.leastWorn),
+      averageCostPerWear: summary.averageCostPerWear,
     );
   }
 

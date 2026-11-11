@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/auth/auth_session.dart';
+import '../../../domain/auth/credential_rules.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -26,51 +27,35 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 _tile(context,
                     icon: Icons.person_outline,
-                    label: 'Edit Profile',
-                    onTap: () {}),
+                    label: 'Edit name',
+                    onTap: () => _editName(context, ref, user)),
                 _tile(context,
-                    icon: Icons.notifications_outlined,
-                    label: 'Notifications',
-                    onTap: () {}),
+                    icon: Icons.lock_reset,
+                    label: 'Reset password',
+                    onTap: () => _sendReset(context, ref, user?.email)),
+                _tile(context,
+                    icon: Icons.delete_outline,
+                    label: 'Delete account',
+                    onTap: () => _deleteAccount(context, ref)),
               ],
             ).animate().fadeIn(delay: 100.ms),
             const SizedBox(height: 20),
             _buildSection(
               context,
-              title: 'Preferences',
-              children: [
-                _tile(context,
-                    icon: Icons.palette_outlined,
-                    label: 'Style Profile',
-                    onTap: () {}),
-                _tile(context,
-                    icon: Icons.cloud_upload_outlined,
-                    label: 'Backup & Sync',
-                    onTap: () {}),
-              ],
-            ).animate().fadeIn(delay: 150.ms),
-            const SizedBox(height: 20),
-            _buildSection(
-              context,
               title: 'About',
               children: [
-                _tile(context,
-                    icon: Icons.privacy_tip_outlined,
-                    label: 'Privacy Policy',
-                    onTap: () {}),
-                _tile(context,
-                    icon: Icons.help_outline,
-                    label: 'Help & Support',
-                    onTap: () {}),
-                _tile(context,
-                    icon: Icons.info_outline,
-                    label: 'App Version',
-                    trailing: const Text('1.0.0',
-                        style: TextStyle(
-                            color: AppColors.textDisabled, fontSize: 13)),
-                    onTap: () {}),
+                _tile(
+                  context,
+                  icon: Icons.info_outline,
+                  label: 'App Version',
+                  trailing: const Text(
+                    '1.0.0',
+                    style: TextStyle(color: AppColors.textDisabled, fontSize: 13),
+                  ),
+                  onTap: () {},
+                ),
               ],
-            ).animate().fadeIn(delay: 200.ms),
+            ).animate().fadeIn(delay: 150.ms),
             const SizedBox(height: 32),
             OutlinedButton.icon(
               icon: const Icon(Icons.logout, color: AppColors.error),
@@ -91,7 +76,13 @@ class ProfileScreen extends ConsumerWidget {
     final rawName = user?.displayName?.trim();
     final name = (rawName == null || rawName.isEmpty) ? 'User' : rawName;
     final email = user?.email ?? '';
-    final initials = name.trim().split(' ').take(2).map((w) => w[0]).join();
+    final initials = name
+        .trim()
+        .split(' ')
+        .where((word) => word.isNotEmpty)
+        .take(2)
+        .map((word) => word[0])
+        .join();
 
     return Row(
       children: [
@@ -138,12 +129,13 @@ class ProfileScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(left: 4, bottom: 10),
           child: Text(title, style: Theme.of(context).textTheme.labelLarge),
         ),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.card,
+        Material(
+          color: AppColors.card,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border, width: 0.5),
+            side: const BorderSide(color: AppColors.border, width: 0.5),
           ),
+          clipBehavior: Clip.antiAlias,
           child: Column(children: children),
         ),
       ],
@@ -162,6 +154,128 @@ class ProfileScreen extends ConsumerWidget {
       onTap: onTap,
       minLeadingWidth: 20,
     );
+  }
+
+  Future<void> _editName(
+    BuildContext context,
+    WidgetRef ref,
+    AuthSession? user,
+  ) async {
+    final controller = TextEditingController(text: user?.displayName ?? '');
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Edit name'),
+        content: TextField(
+          controller: controller,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(labelText: 'Full name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    final name = controller.text.trim();
+    controller.dispose();
+    if (saved != true || !context.mounted) return;
+    final error = CredentialRules.fullName(name);
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+    try {
+      await ref.read(authGatewayProvider).updateProfile(fullName: name);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Name updated')),
+        );
+      }
+    } on AuthFailure catch (failure) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failure.message)),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendReset(
+    BuildContext context,
+    WidgetRef ref,
+    String? email,
+  ) async {
+    if (email == null || email.isEmpty) return;
+    try {
+      await ref.read(authGatewayProvider).sendPasswordReset(email);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password reset email sent')),
+        );
+      }
+    } on AuthFailure catch (failure) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failure.message)),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+    final passwordCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Delete account'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'This removes your closet, outfits, and calendar. Enter your password to confirm.',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: passwordCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    final password = passwordCtrl.text;
+    passwordCtrl.dispose();
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await ref.read(closeAccountProvider).call(password: password);
+      if (context.mounted) context.go('/login');
+    } on AuthFailure catch (failure) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failure.message)),
+        );
+      }
+    }
   }
 
   void _confirmSignOut(BuildContext context, WidgetRef ref) {

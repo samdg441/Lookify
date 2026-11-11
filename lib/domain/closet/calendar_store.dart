@@ -12,4 +12,8 @@ abstract interface class CalendarStore {
   });
 
   Future<void> removeEntryForDate(DateTime date);
+
+  Future<int> countEntries();
+
+  Future<void> deleteAll();
 }

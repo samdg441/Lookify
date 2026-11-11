@@ -8,6 +8,7 @@ import '../../core/utils/bounded_concurrency.dart';
 import '../../core/utils/file_utils.dart';
 import '../../domain/diagnostics/crash_reporter.dart';
 import '../../domain/imaging/background_remover.dart';
+import '../../domain/imaging/local_photo.dart';
 
 /// Removes the background from garment photos using ML Kit's on-device
 /// Subject Segmentation. Android only — the Flutter plugin's iOS side has
@@ -39,7 +40,7 @@ class BackgroundRemovalService implements BackgroundRemover {
   /// from the gallery. Order is preserved; a failed or skipped image keeps
   /// its original file exactly as [removeBackground] already guarantees.
   @override
-  Future<List<File>> removeBackgroundBatch(List<File> images) {
+  Future<List<LocalPhoto>> removeBackgroundBatch(List<LocalPhoto> images) {
     return mapWithConcurrency(
       images,
       removeBackground,
@@ -47,13 +48,13 @@ class BackgroundRemovalService implements BackgroundRemover {
     );
   }
 
-  /// Returns a new PNG file with the background removed, or [image]
-  /// unchanged if segmentation fails or finds no subject to isolate. Never
-  /// throws — background removal is a best-effort enhancement, not a
-  /// requirement for adding a garment.
+  /// Returns a new PNG with the background removed, or [image] unchanged if
+  /// segmentation fails or finds no subject to isolate. Never throws —
+  /// background removal is a best-effort enhancement.
   @override
-  Future<File> removeBackground(File image) async {
+  Future<LocalPhoto> removeBackground(LocalPhoto image) async {
     if (!isSupported) return image;
+    final source = File(image.path);
 
     final segmenter = SubjectSegmenter(
       options: SubjectSegmenterOptions(
@@ -68,7 +69,7 @@ class BackgroundRemovalService implements BackgroundRemover {
 
     try {
       final result =
-          await segmenter.processImage(InputImage.fromFilePath(image.path));
+          await segmenter.processImage(InputImage.fromFilePath(source.path));
       final bitmap = result.foregroundBitmap;
       if (bitmap == null || bitmap.isEmpty) {
         // ML Kit ran without throwing but found nothing to isolate (or we
@@ -76,7 +77,7 @@ class BackgroundRemovalService implements BackgroundRemover {
         // above). Distinct from the catch below: this is *not* a crash,
         // it's ML Kit declining to produce a cutout for this photo.
         debugPrint(
-          '[BackgroundRemoval] no foreground bitmap for ${image.path} '
+          '[BackgroundRemoval] no foreground bitmap for ${source.path} '
           '(bitmap ${bitmap == null ? 'null' : 'empty'}); keeping original.',
         );
         return image;
@@ -85,17 +86,17 @@ class BackgroundRemovalService implements BackgroundRemover {
       final dir = await getTemporaryDirectory();
       final outPath = p.join(
         dir.path,
-        '${p.basenameWithoutExtension(image.path)}_nobg.png',
+        '${p.basenameWithoutExtension(source.path)}_nobg.png',
       );
       final processed = File(outPath)..writeAsBytesSync(bitmap);
 
-      // `image` is now redundant — its content lives on, transformed, in
+      // `source` is now redundant — its content lives on, transformed, in
       // `processed`, which is what the rest of the app uses from here on.
       // Deleting it only after the write succeeds means a failed write
       // never loses the only copy of the photo.
-      await deleteFileQuietly(image);
+      await deleteFileQuietly(source);
 
-      return processed;
+      return LocalPhoto(processed.path);
     } catch (e, st) {
       // Swallowed deliberately — background removal is best-effort, not a
       // requirement for adding a garment — but logged, since a silent
@@ -105,7 +106,7 @@ class BackgroundRemovalService implements BackgroundRemover {
       // Services); that surfaces as an exception on the first few calls
       // and should stop once it finishes downloading in the background.
       debugPrint('[BackgroundRemoval] segmentation failed for '
-          '${image.path}: $e');
+          '${source.path}: $e');
       debugPrintStack(stackTrace: st, label: '[BackgroundRemoval]');
       final reporter = _crashReporter;
       if (reporter != null) {

@@ -1,7 +1,5 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/anthropic/anthropic_outfit_suggester.dart';
 import '../../data/datasources/background_removal_service.dart';
 import '../../data/datasources/model_install_service.dart';
 import '../../data/diagnostics/crash_reporter_factory.dart';
@@ -9,11 +7,15 @@ import '../../data/firebase/firebase_auth_gateway.dart';
 import '../../data/firebase/firebase_calendar_store.dart';
 import '../../data/firebase/firebase_garment_store.dart';
 import '../../data/firebase/firebase_outfit_store.dart';
+import '../../data/firebase/firebase_outfit_suggester.dart';
 import '../../domain/auth/auth_gateway.dart';
 import '../../domain/auth/auth_session.dart';
 import '../../domain/closet/calendar_store.dart';
+import '../../domain/closet/close_account.dart';
 import '../../domain/closet/garment_store.dart';
 import '../../domain/closet/outfit_store.dart';
+import '../../domain/closet/remove_garment.dart';
+import '../../domain/closet/schedule_outfit.dart';
 import '../../domain/closet/wardrobe_insights.dart';
 import '../../domain/diagnostics/crash_reporter.dart';
 import '../../domain/imaging/background_remover.dart';
@@ -44,9 +46,29 @@ final currentUserProvider = Provider<AuthSession?>((ref) {
 });
 
 final aiServiceProvider = Provider<OutfitSuggester>(
-  (_) => AnthropicOutfitSuggester(
-    dotenv.env['AI_API_KEY'] ?? '',
-    dotenv.env['AI_MODEL'] ?? '',
+  (_) => FirebaseOutfitSuggester(),
+);
+
+final removeGarmentProvider = Provider<RemoveGarment>(
+  (ref) => RemoveGarment(
+    garments: ref.watch(garmentRepositoryProvider),
+    outfits: ref.watch(outfitRepositoryProvider),
+  ),
+);
+
+final scheduleOutfitProvider = Provider<ScheduleOutfit>(
+  (ref) => ScheduleOutfit(
+    calendar: ref.watch(calendarRepositoryProvider),
+    outfits: ref.watch(outfitRepositoryProvider),
+  ),
+);
+
+final closeAccountProvider = Provider<CloseAccount>(
+  (ref) => CloseAccount(
+    auth: ref.watch(authGatewayProvider),
+    garments: ref.watch(garmentRepositoryProvider),
+    outfits: ref.watch(outfitRepositoryProvider),
+    calendar: ref.watch(calendarRepositoryProvider),
   ),
 );
 
@@ -78,12 +100,18 @@ final calendarRepositoryProvider = Provider<CalendarStore>(
   (ref) => FirebaseCalendarStore(),
 );
 
-final selectedCategoryProvider = StateProvider<String>((ref) => 'All');
+final closetCategoryProvider = StateProvider<String>((ref) => 'All');
 
-final garmentsProvider = FutureProvider.autoDispose<List<Garment>>((ref) {
+final builderCategoryProvider = StateProvider<String>((ref) => 'All');
+
+/// [category] `null` or `All` loads the whole wardrobe. Closet and the outfit
+/// builder pass different categories so one screen's filter does not change
+/// the other.
+final garmentsProvider =
+    FutureProvider.autoDispose.family<List<Garment>, String?>((ref, category) {
   final repo = ref.watch(garmentRepositoryProvider);
-  final category = ref.watch(selectedCategoryProvider);
-  return repo.getGarments(category: category == 'All' ? null : category);
+  final filter = category == null || category == 'All' ? null : category;
+  return repo.getGarments(category: filter);
 });
 
 final garmentProvider =
@@ -128,8 +156,13 @@ final aiSuggestionsProvider = FutureProvider.autoDispose
         garments: garments,
         occasion: params.occasion,
         season: params.season,
+        weather: params.weather,
         count: 3,
       );
+});
+
+final plannedOutfitsCountProvider = FutureProvider.autoDispose<int>((ref) {
+  return ref.watch(calendarRepositoryProvider).countEntries();
 });
 
 final wardrobeInsightsProvider =

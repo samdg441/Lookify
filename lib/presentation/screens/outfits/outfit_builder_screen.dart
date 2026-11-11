@@ -69,8 +69,8 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final garmentsAsync = ref.watch(garmentsProvider);
-    final category = ref.watch(selectedCategoryProvider);
+    final category = ref.watch(builderCategoryProvider);
+    final garmentsAsync = ref.watch(garmentsProvider(category));
 
     return Scaffold(
       appBar: AppBar(
@@ -107,7 +107,7 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
             categories: AppConstants.garmentCategories,
             selected: category,
             onSelected: (c) =>
-                ref.read(selectedCategoryProvider.notifier).state = c,
+                ref.read(builderCategoryProvider.notifier).state = c,
           ),
           const SizedBox(height: 12),
           if (_selectedIds.isNotEmpty)

@@ -13,6 +13,17 @@ abstract interface class OutfitStore {
     String? notes,
   });
 
+  Future<void> updateOutfit({
+    required String id,
+    required String name,
+    String? occasion,
+    String? season,
+    String? notes,
+  });
+
+  /// Removes [garmentId] from every outfit. Deletes an outfit that would be left empty.
+  Future<void> detachGarment(String garmentId);
+
   Future<void> deleteOutfit(String id);
 
   Future<void> incrementWearCount(String id);
