@@ -27,6 +27,8 @@ WardrobeInsights summarizeWardrobe(List<Garment> garments, {int limit = 5}) {
 
   final byWear = [...garments]
     ..sort((a, b) => b.wearCount.compareTo(a.wearCount));
+  final mostWorn = byWear.take(limit).toList();
+  final mostWornIds = mostWorn.map((garment) => garment.id).toSet();
 
   final costs = [
     for (final garment in garments)
@@ -37,8 +39,11 @@ WardrobeInsights summarizeWardrobe(List<Garment> garments, {int limit = 5}) {
   return WardrobeInsights(
     total: garments.length,
     categoryCounts: counts,
-    mostWorn: byWear.take(limit).toList(),
-    leastWorn: byWear.reversed.take(limit).toList(),
+    mostWorn: mostWorn,
+    leastWorn: byWear.reversed
+        .where((garment) => !mostWornIds.contains(garment.id))
+        .take(limit)
+        .toList(),
     averageCostPerWear: costs.isEmpty
         ? null
         : costs.reduce((sum, cost) => sum + cost) / costs.length,

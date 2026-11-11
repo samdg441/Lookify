@@ -201,28 +201,32 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
   }
 
   Widget _buildStats(BuildContext context, Garment garment) {
+    final cards = <Widget>[
+      _statCard(context,
+          icon: Icons.repeat,
+          label: 'Times worn',
+          value: '${garment.wearCount}'),
+      if (garment.price != null)
+        _statCard(context,
+            icon: Icons.attach_money,
+            label: 'Cost / wear',
+            value: garment.costPerWear > 0
+                ? formatPrice(garment.costPerWear, garment.currency)
+                : 'N/A'),
+      if (garment.lastWorn != null)
+        _statCard(context,
+            icon: Icons.calendar_today_outlined,
+            label: 'Last worn',
+            value: formatShortDate(garment.lastWorn!)),
+    ];
+
     return Row(
       children: [
-        _statCard(context,
-            icon: Icons.repeat,
-            label: 'Times worn',
-            value: '${garment.wearCount}'),
-        const SizedBox(width: 12),
-        if (garment.price != null)
-          _statCard(context,
-              icon: Icons.attach_money,
-              label: 'Cost / wear',
-              value: garment.costPerWear > 0
-                  ? formatPrice(garment.costPerWear, garment.currency)
-                  : 'N/A'),
-        if (garment.lastWorn != null) ...[
-          const SizedBox(width: 12),
-          _statCard(context,
-              icon: Icons.calendar_today_outlined,
-              label: 'Last worn',
-              value: formatShortDate(garment.lastWorn!)),
+        for (var i = 0; i < cards.length; i++) ...[
+          if (i > 0) const SizedBox(width: 12),
+          cards[i],
         ],
-      ].expand((w) => [w]).take(3).toList(),
+      ],
     ).animate().fadeIn(delay: 100.ms);
   }
 

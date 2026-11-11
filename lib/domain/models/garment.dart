@@ -10,6 +10,7 @@ class Garment {
   final double? price;
   final String currency;
   final List<String> imageUrls;
+  final List<String> imagePaths;
   final String? notes;
   final int wearCount;
   final DateTime? lastWorn;
@@ -27,6 +28,7 @@ class Garment {
     this.price,
     this.currency = defaultCurrency,
     this.imageUrls = const [],
+    this.imagePaths = const [],
     this.notes,
     this.wearCount = 0,
     this.lastWorn,
@@ -38,7 +40,7 @@ class Garment {
   String? get coverImageUrl => imageUrls.isEmpty ? null : imageUrls.first;
 
   double get costPerWear {
-    if (price == null || price! <= 0 || wearCount <= 0) return price ?? 0;
+    if (price == null || price! <= 0 || wearCount <= 0) return 0;
     return price! / wearCount;
   }
 }

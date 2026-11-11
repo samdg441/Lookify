@@ -93,6 +93,8 @@ void main() {
     expect(insights.categoryCounts['Tops'], 2);
     expect(insights.averageCostPerWear, 32.5);
     expect(insights.mostWorn.first.id, '1');
+    expect(insights.leastWorn, isEmpty);
+    expect(garment(id: '2', name: 'B', price: 50).costPerWear, 0);
   });
 
   test('suggestion payloads keep only garments that exist in the wardrobe', () {
