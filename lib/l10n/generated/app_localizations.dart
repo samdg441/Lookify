@@ -542,6 +542,18 @@ abstract class AppLocalizations {
   /// **'Arma tu primer conjunto con prendas de tu armario'**
   String get noOutfitsSubtitle;
 
+  /// No description provided for @showAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todas'**
+  String get showAll;
+
+  /// No description provided for @tryAnotherFilter.
+  ///
+  /// In es, this message translates to:
+  /// **'Prueba otro filtro'**
+  String get tryAnotherFilter;
+
   /// No description provided for @myOutfits.
   ///
   /// In es, this message translates to:

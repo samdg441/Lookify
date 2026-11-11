@@ -70,7 +70,7 @@ class MainNavigationScreen extends StatelessWidget {
           unselectedFontSize: 11,
           backgroundColor: AppColors.surface,
           selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textDisabled,
+          unselectedItemColor: AppColors.textSecondary,
           items: [
             for (var i = 0; i < _tabs.length; i++)
               BottomNavigationBarItem(

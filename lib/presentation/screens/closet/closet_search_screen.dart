@@ -62,23 +62,30 @@ class _ClosetSearchScreenState extends ConsumerState<ClosetSearchScreen> {
               subtitle: _query.trim().isEmpty
                   ? l10n.nothingToSearchSubtitle
                   : l10n.noMatchesSubtitle,
+              action: _query.trim().isEmpty
+                  ? ElevatedButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.addGarment),
+                      onPressed: () => context.push('/closet/add'),
+                    )
+                  : null,
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: matches.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (_, index) {
-              final garment = matches.elementAt(index);
-              return SizedBox(
-                height: 220,
-                child: GarmentCard(
-                  garment: garment,
-                  index: index,
-                  onTap: () => context.push('/closet/${garment.id}'),
-                ),
-              );
-            },
+          final results = matches.toList();
+          return GridView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.72,
+            ),
+            itemCount: results.length,
+            itemBuilder: (_, index) => GarmentCard(
+              garment: results[index],
+              index: index,
+              onTap: () => context.push('/closet/${results[index].id}'),
+            ),
           );
         },
       ),

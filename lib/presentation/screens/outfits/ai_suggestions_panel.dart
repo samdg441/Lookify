@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
 import '../../widgets/option_sheet.dart';
 import '../../widgets/outfit_card.dart';
@@ -57,6 +58,11 @@ class _AiSuggestionsPanelState extends ConsumerState<AiSuggestionsPanel> {
                     icon: Icons.auto_awesome_outlined,
                     title: AppLocalizations.of(context).noSuggestions,
                     subtitle: AppLocalizations.of(context).noSuggestionsSubtitle,
+                    action: ElevatedButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: Text(AppLocalizations.of(context).addGarment),
+                      onPressed: () => context.push('/closet/add'),
+                    ),
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 16),

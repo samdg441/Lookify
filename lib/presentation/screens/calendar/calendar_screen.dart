@@ -143,8 +143,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _buildDayDetail(BuildContext context, CalendarEntry? entry) {
     final l10n = AppLocalizations.of(context);
-    final isToday = isSameDay(_selectedDay, DateTime.now());
-    final isPast = _selectedDay.isBefore(DateTime.now()) && !isToday;
+    final now = DateTime.now();
+    final isToday = isSameDay(_selectedDay, now);
+    final selectedDate = DateTime(
+      _selectedDay.year,
+      _selectedDay.month,
+      _selectedDay.day,
+    );
+    final today = DateTime(now.year, now.month, now.day);
+    final isPast = selectedDate.isBefore(today);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -246,35 +253,43 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _buildEmptyDay(BuildContext context, bool isPast) {
     final l10n = AppLocalizations.of(context);
-    return GestureDetector(
-      onTap: isPast ? null : () => _pickOutfit(context),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isPast ? AppColors.border : AppColors.primary.withOpacity(0.3),
-            width: isPast ? 0.5 : 1,
-          ),
+    return Material(
+      color: AppColors.surfaceVariant,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isPast ? AppColors.border : AppColors.primary.withOpacity(0.3),
+          width: isPast ? 0.5 : 1,
         ),
-        child: Row(
-          children: [
-            Icon(
-              isPast
-                  ? Icons.remove_circle_outline
-                  : Icons.add_circle_outline,
-              color: isPast ? AppColors.textDisabled : AppColors.primary,
+      ),
+      child: InkWell(
+        onTap: isPast ? null : () => _pickOutfit(context),
+        borderRadius: BorderRadius.circular(16),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Icon(
+                  isPast
+                      ? Icons.remove_circle_outline
+                      : Icons.add_circle_outline,
+                  color: isPast ? AppColors.textDisabled : AppColors.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    isPast ? l10n.noOutfitRecorded : l10n.planOutfit,
+                    style: TextStyle(
+                      color: isPast ? AppColors.textDisabled : AppColors.primary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Text(
-              isPast ? l10n.noOutfitRecorded : l10n.planOutfit,
-              style: TextStyle(
-                color: isPast ? AppColors.textDisabled : AppColors.primary,
-                fontSize: 14,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     ).animate().fadeIn();

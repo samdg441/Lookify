@@ -41,6 +41,12 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
         body: ErrorView(message: AppLocalizations.of(context).garmentNotFound),
       ),
       data: (garment) => Scaffold(
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+            child: _buildWearButton(context, ref, garment.id),
+          ),
+        ),
         body: CustomScrollView(
           slivers: [
             SliverAppBar(
@@ -95,8 +101,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
                     const SizedBox(height: 24),
                     _buildNotes(context, garment.notes!),
                   ],
-                  const SizedBox(height: 32),
-                  _buildWearButton(context, ref, garment.id),
+                  const SizedBox(height: 24),
                 ]),
               ),
             ),

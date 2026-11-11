@@ -24,7 +24,7 @@ class CategoryFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = showAll ? ['All', ...categories] : categories;
     return SizedBox(
-      height: 44,
+      height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -33,46 +33,51 @@ class CategoryFilter extends StatelessWidget {
         itemBuilder: (context, index) {
           final cat = items[index];
           final isSelected = cat == selected;
-          return GestureDetector(
-            onTap: () => onSelected(cat),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary
-                    : AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
+          return SizedBox(
+            height: 48,
+            child: Material(
+              color: isSelected ? AppColors.primary : AppColors.surfaceVariant,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(
                   color: isSelected ? AppColors.primary : AppColors.border,
                   width: 0.5,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (showIcons && cat != 'All') ...[
-                    Text(
-                      categoryIcon(cat),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  Text(
-                    cat == 'All'
-                        ? AppLocalizations.of(context).all
-                        : catalogLabel(AppLocalizations.of(context), cat),
-                    style: TextStyle(
-                      color: isSelected
-                          ? AppColors.onPrimary
-                          : AppColors.textSecondary,
-                      fontSize: 13,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                    ),
+              child: InkWell(
+                onTap: () => onSelected(cat),
+                customBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (showIcons && cat != 'All') ...[
+                        Text(
+                          categoryIcon(cat),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      Text(
+                        cat == 'All'
+                            ? AppLocalizations.of(context).all
+                            : catalogLabel(AppLocalizations.of(context), cat),
+                        style: TextStyle(
+                          color: isSelected
+                              ? AppColors.onPrimary
+                              : AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           );

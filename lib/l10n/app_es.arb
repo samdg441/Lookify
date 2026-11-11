@@ -81,6 +81,8 @@
   "outfitsFailed": "No se pudieron cargar los conjuntos",
   "noOutfitsYet": "Todavía no hay conjuntos",
   "noOutfitsSubtitle": "Arma tu primer conjunto con prendas de tu armario",
+  "showAll": "Ver todas",
+  "tryAnotherFilter": "Prueba otro filtro",
   "myOutfits": "Mis conjuntos",
   "aiSuggestions": "Sugerencias",
   "curating": "Preparando tus conjuntos…",

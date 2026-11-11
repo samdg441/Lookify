@@ -61,6 +61,11 @@ class _OutfitsScreenState extends ConsumerState<OutfitsScreen>
         listenable: _tabController,
         builder: (context, _) {
           if (_tabController.index != 0) return const SizedBox.shrink();
+          final outfits = ref.watch(outfitsProvider).valueOrNull;
+          final occasion = ref.watch(selectedOccasionProvider);
+          if (outfits != null && outfits.isEmpty && occasion == 'All') {
+            return const SizedBox.shrink();
+          }
           return FloatingActionButton(
             onPressed: () => context.push('/outfits/builder'),
             child: const Icon(Icons.add),
@@ -142,12 +147,21 @@ class _MySavedOutfits extends ConsumerWidget {
                 ? EmptyView(
                     icon: Icons.checkroom_outlined,
                     title: l10n.noOutfitsYet,
-                    subtitle: l10n.noOutfitsSubtitle,
-                    action: ElevatedButton.icon(
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.buildOutfit),
-                      onPressed: () => context.push('/outfits/builder'),
-                    ),
+                    subtitle: selectedOccasion == 'All'
+                        ? l10n.noOutfitsSubtitle
+                        : l10n.tryAnotherFilter,
+                    action: selectedOccasion == 'All'
+                        ? ElevatedButton.icon(
+                            icon: const Icon(Icons.add),
+                            label: Text(l10n.buildOutfit),
+                            onPressed: () => context.push('/outfits/builder'),
+                          )
+                        : TextButton(
+                            onPressed: () => ref
+                                .read(selectedOccasionProvider.notifier)
+                                .state = 'All',
+                            child: Text(l10n.showAll),
+                          ),
                   )
                 : GridView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),

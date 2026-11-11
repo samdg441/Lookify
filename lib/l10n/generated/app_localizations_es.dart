@@ -262,6 +262,12 @@ class AppLocalizationsEs extends AppLocalizations {
       'Arma tu primer conjunto con prendas de tu armario';
 
   @override
+  String get showAll => 'Ver todas';
+
+  @override
+  String get tryAnotherFilter => 'Prueba otro filtro';
+
+  @override
   String get myOutfits => 'Mis conjuntos';
 
   @override

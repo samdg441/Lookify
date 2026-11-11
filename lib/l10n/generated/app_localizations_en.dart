@@ -262,6 +262,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Build your first outfit by combining garments from your closet';
 
   @override
+  String get showAll => 'Show all';
+
+  @override
+  String get tryAnotherFilter => 'Try another filter';
+
+  @override
   String get myOutfits => 'My Outfits';
 
   @override

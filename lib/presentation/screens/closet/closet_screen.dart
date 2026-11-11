@@ -58,7 +58,12 @@ class ClosetScreen extends ConsumerWidget {
                                 label: Text(l10n.addGarment),
                                 onPressed: () => context.push('/closet/add'),
                               )
-                            : null,
+                            : TextButton(
+                                onPressed: () => ref
+                                    .read(closetCategoryProvider.notifier)
+                                    .state = 'All',
+                                child: Text(l10n.showAll),
+                              ),
                       )
                     : _buildGrid(context, garments),
               ),
@@ -66,11 +71,19 @@ class ClosetScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/closet/add'),
-        child: const Icon(Icons.add),
-      ).animate().scale(delay: 300.ms),
+      floatingActionButton: garmentsAsync.maybeWhen(
+        data: (garments) =>
+            garments.isEmpty && selectedCategory == 'All' ? null : _addButton(context),
+        orElse: () => _addButton(context),
+      ),
     );
+  }
+
+  Widget _addButton(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () => context.push('/closet/add'),
+      child: const Icon(Icons.add),
+    ).animate().scale(delay: 300.ms);
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {

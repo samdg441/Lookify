@@ -131,6 +131,11 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
                       icon: Icons.checkroom_outlined,
                       title: AppLocalizations.of(context).noGarmentsYet,
                       subtitle: AppLocalizations.of(context).noGarmentsSubtitle,
+                      action: ElevatedButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: Text(AppLocalizations.of(context).addGarment),
+                        onPressed: () => context.push('/closet/add'),
+                      ),
                     )
                   : GridView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),

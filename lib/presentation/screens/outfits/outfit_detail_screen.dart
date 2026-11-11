@@ -25,6 +25,27 @@ class OutfitDetailScreen extends ConsumerWidget {
         body: ErrorView(message: AppLocalizations.of(context).outfitNotFound),
       ),
       data: (outfit) => Scaffold(
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.checkroom),
+              label: Text(AppLocalizations.of(context).logWornToday),
+              onPressed: () async {
+                await ref.read(outfitRepositoryProvider).incrementWearCount(id);
+                ref.invalidate(outfitProvider(id));
+                ref.invalidate(outfitsProvider);
+                ref.invalidate(garmentsProvider);
+                ref.invalidate(wardrobeInsightsProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppLocalizations.of(context).loggedWorn)),
+                  );
+                }
+              },
+            ),
+          ),
+        ),
         appBar: AppBar(
           title: Text(outfit.name),
           actions: [
@@ -86,23 +107,6 @@ class OutfitDetailScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               Text(outfit.notes!, style: Theme.of(context).textTheme.bodyMedium),
             ],
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.checkroom),
-              label: Text(AppLocalizations.of(context).logWornToday),
-              onPressed: () async {
-                await ref.read(outfitRepositoryProvider).incrementWearCount(id);
-                ref.invalidate(outfitProvider(id));
-                ref.invalidate(outfitsProvider);
-                ref.invalidate(garmentsProvider);
-                ref.invalidate(wardrobeInsightsProvider);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context).loggedWorn)),
-                  );
-                }
-              },
-            ),
           ],
         ),
       ),
