@@ -4,13 +4,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '../../domain/models/garment.dart';
 import '../../domain/models/outfit.dart';
 
-String? firestoreIso(dynamic value) {
-  if (value == null) return null;
-  if (value is Timestamp) return value.toDate().toIso8601String();
-  if (value is DateTime) return value.toIso8601String();
-  return value.toString();
-}
-
 DateTime? firestoreDate(dynamic value) {
   if (value == null) return null;
   if (value is Timestamp) return value.toDate();
@@ -58,7 +51,7 @@ Future<Garment> garmentFromDoc(
     season: data['season'] as String?,
     occasion: data['occasion'] as String?,
     price: (data['price'] as num?)?.toDouble(),
-    currency: data['currency'] as String? ?? 'COP',
+    currency: data['currency'] as String? ?? Garment.defaultCurrency,
     imageUrls: urls,
     notes: data['notes'] as String?,
     wearCount: (data['wearCount'] as num?)?.toInt() ?? 0,
@@ -80,7 +73,6 @@ Outfit outfitFromDoc(
     garments: garments,
     occasion: data['occasion'] as String?,
     season: data['season'] as String?,
-    imageUrl: data['imageUrl'] as String?,
     notes: data['notes'] as String?,
     wearCount: (data['wearCount'] as num?)?.toInt() ?? 0,
     lastWorn: firestoreDate(data['lastWorn']),

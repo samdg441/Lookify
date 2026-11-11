@@ -1,9 +1,6 @@
 class AppConstants {
   AppConstants._();
 
-  static const String appName = 'Virtual Closet';
-  static const String appTagline = 'Your closet, curated.';
-
   // Garment categories
   static const List<String> garmentCategories = [
     'Tops',

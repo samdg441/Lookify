@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/providers.dart';
 import '../../widgets/garment_card.dart';
+import '../../widgets/option_sheet.dart';
 import '../../widgets/category_filter.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/constants/app_constants.dart';
@@ -201,7 +202,13 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
   Widget _dropdownChip(String label, String? selected, List<String> options,
       ValueChanged<String?> onChanged) {
     return GestureDetector(
-      onTap: () => _showSheet(label, options, selected, onChanged),
+      onTap: () => showOptionSheet(
+        context: context,
+        label: label,
+        options: options,
+        selected: selected,
+        onChanged: onChanged,
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
@@ -230,38 +237,6 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
             ),
             const Icon(Icons.keyboard_arrow_down,
                 size: 16, color: AppColors.textDisabled),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSheet(String label, List<String> options, String? selected,
-      ValueChanged<String?> onChanged) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Text(label, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            ...options.map((o) => ListTile(
-                  title: Text(o),
-                  trailing: selected == o
-                      ? const Icon(Icons.check, color: AppColors.primary)
-                      : null,
-                  onTap: () {
-                    onChanged(selected == o ? null : o);
-                    context.pop();
-                  },
-                )),
-            const SizedBox(height: 8),
           ],
         ),
       ),

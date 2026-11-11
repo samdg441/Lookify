@@ -5,7 +5,6 @@ class AppColors {
 
   // Brand
   static const Color primary = Color(0xFFC8A96E);
-  static const Color primaryDark = Color(0xFF9B7D47);
   static const Color primaryLight = Color(0xFFE8D5B7);
 
   // Background
@@ -37,10 +36,4 @@ class AppColors {
   static const Color categoryOuterwear = Color(0xFF708090);
   static const Color categoryDresses = Color(0xFFDA70D6);
   static const Color categoryBags = Color(0xFF8FBC8F);
-
-  // Season colors
-  static const Color seasonSpring = Color(0xFF98D8AA);
-  static const Color seasonSummer = Color(0xFFF7C59F);
-  static const Color seasonFall = Color(0xFFD4845A);
-  static const Color seasonWinter = Color(0xFF9DCFED);
 }

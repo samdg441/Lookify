@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
+import '../../widgets/option_sheet.dart';
 import '../../widgets/outfit_card.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../../core/constants/app_constants.dart';
@@ -137,7 +137,13 @@ class _AiSuggestionsPanelState extends ConsumerState<AiSuggestionsPanel> {
     ValueChanged<String?> onChanged,
   ) {
     return GestureDetector(
-      onTap: () => _showFilterSheet(label, options, selected, onChanged),
+      onTap: () => showOptionSheet(
+        context: context,
+        label: label,
+        options: options,
+        selected: selected,
+        onChanged: onChanged,
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
@@ -172,54 +178,6 @@ class _AiSuggestionsPanelState extends ConsumerState<AiSuggestionsPanel> {
                   ? AppColors.primary
                   : AppColors.textDisabled,
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showFilterSheet(
-    String label,
-    List<String> options,
-    String? selected,
-    ValueChanged<String?> onChanged,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(label, style: Theme.of(context).textTheme.titleMedium),
-            ),
-            ...options.map(
-              (option) => ListTile(
-                title: Text(option),
-                trailing: selected == option
-                    ? const Icon(Icons.check, color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  onChanged(selected == option ? null : option);
-                  context.pop();
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
           ],
         ),
       ),

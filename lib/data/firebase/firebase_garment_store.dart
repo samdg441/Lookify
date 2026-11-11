@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/utils/bounded_concurrency.dart';
 import '../../core/utils/file_utils.dart';
 import '../../domain/closet/garment_store.dart';
@@ -67,7 +66,7 @@ class FirebaseGarmentStore implements GarmentStore {
     String? season,
     String? occasion,
     double? price,
-    String currency = AppConstants.defaultCurrency,
+    String currency = Garment.defaultCurrency,
     String? notes,
     List<LocalPhoto> photos = const [],
   }) async {
@@ -132,7 +131,7 @@ class FirebaseGarmentStore implements GarmentStore {
     String? season,
     String? occasion,
     double? price,
-    String currency = AppConstants.defaultCurrency,
+    String currency = Garment.defaultCurrency,
     String? notes,
   }) async {
     await _garments.doc(id).update({

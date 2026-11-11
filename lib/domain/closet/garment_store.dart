@@ -1,4 +1,3 @@
-import '../../core/constants/app_constants.dart';
 import '../imaging/local_photo.dart';
 import '../models/garment.dart';
 import 'wardrobe_insights.dart';
@@ -16,7 +15,7 @@ abstract interface class GarmentStore {
     String? season,
     String? occasion,
     double? price,
-    String currency = AppConstants.defaultCurrency,
+    String currency = Garment.defaultCurrency,
     String? notes,
     List<LocalPhoto> photos = const [],
   });
@@ -30,7 +29,7 @@ abstract interface class GarmentStore {
     String? season,
     String? occasion,
     double? price,
-    String currency = AppConstants.defaultCurrency,
+    String currency = Garment.defaultCurrency,
     String? notes,
   });
 

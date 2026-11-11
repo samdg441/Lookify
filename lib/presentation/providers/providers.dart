@@ -170,10 +170,6 @@ final wardrobeInsightsProvider =
   return ref.watch(garmentRepositoryProvider).insights();
 });
 
-final wardrobeSizeProvider = Provider<AsyncValue<int>>((ref) {
-  return ref.watch(wardrobeInsightsProvider).whenData((insights) => insights.total);
-});
-
 final categoryStatsProvider = Provider<AsyncValue<Map<String, int>>>((ref) {
   return ref
       .watch(wardrobeInsightsProvider)
