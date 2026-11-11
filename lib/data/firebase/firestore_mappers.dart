@@ -25,17 +25,21 @@ Future<Garment> garmentFromDoc(
           .compareTo((b['position'] as num?) ?? 0),
     );
 
+  final paths = <String>[];
   final urls = <String>[];
-  if (resolveImages) {
-    final bucket = storage ?? FirebaseStorage.instance;
-    for (final image in raw) {
-      final path = image['path'] as String?;
-      if (path == null || path.isEmpty) continue;
-      try {
-        urls.add(await bucket.ref(path).getDownloadURL());
-      } catch (_) {
-        // A missing object should not hide the rest of the garment.
-      }
+  final bucket = storage ?? FirebaseStorage.instance;
+  for (final image in raw) {
+    final path = image['path'] as String?;
+    if (path == null || path.isEmpty) continue;
+    if (!resolveImages) {
+      paths.add(path);
+      continue;
+    }
+    try {
+      urls.add(await bucket.ref(path).getDownloadURL());
+      paths.add(path);
+    } catch (_) {
+      // A missing object should not hide the rest of the garment.
     }
   }
 
@@ -53,6 +57,7 @@ Future<Garment> garmentFromDoc(
     price: (data['price'] as num?)?.toDouble(),
     currency: data['currency'] as String? ?? Garment.defaultCurrency,
     imageUrls: urls,
+    imagePaths: paths,
     notes: data['notes'] as String?,
     wearCount: (data['wearCount'] as num?)?.toInt() ?? 0,
     lastWorn: firestoreDate(data['lastWorn']),

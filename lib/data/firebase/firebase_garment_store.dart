@@ -133,8 +133,11 @@ class FirebaseGarmentStore implements GarmentStore {
     double? price,
     String currency = Garment.defaultCurrency,
     String? notes,
+    List<String>? keptImagePaths,
+    List<LocalPhoto> photos = const [],
   }) async {
-    await _garments.doc(id).update({
+    final doc = _garments.doc(id);
+    final update = <String, dynamic>{
       'name': name,
       'category': category,
       'brand': brand,
@@ -145,7 +148,47 @@ class FirebaseGarmentStore implements GarmentStore {
       'currency': currency,
       'notes': notes,
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    };
+
+    if (keptImagePaths != null) {
+      final existing = await doc.get();
+      final previous = _imagePaths(existing.data());
+      final kept = [
+        for (final path in keptImagePaths)
+          if (previous.contains(path)) path,
+      ];
+      final uploaded = <String>[];
+      try {
+        final added = await mapWithConcurrency(
+          photos,
+          (photo) async {
+            final path = await _uploadImage(File(photo.path));
+            uploaded.add(path);
+            return path;
+          },
+          maxConcurrent: _uploadConcurrency,
+        );
+        final images = [...kept, ...added];
+        update['images'] = [
+          for (var i = 0; i < images.length; i++)
+            {'path': images[i], 'position': i},
+        ];
+        await doc.update(update);
+        await _deleteStorage([
+          for (final path in previous)
+            if (!kept.contains(path)) path,
+        ]);
+        for (final photo in photos) {
+          await deleteFileQuietly(File(photo.path));
+        }
+      } catch (_) {
+        await _deleteStorage(uploaded);
+        rethrow;
+      }
+      return;
+    }
+
+    await doc.update(update);
   }
 
   @override

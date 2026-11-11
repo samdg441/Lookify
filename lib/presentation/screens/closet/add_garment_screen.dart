@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +35,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
   String? _season;
   String? _occasion;
   String _currency = AppConstants.defaultCurrency;
+  final List<({String path, String url})> _keptPhotos = [];
   final List<File> _imageFiles = [];
   bool _saving = false;
   bool _removeBackground = true;
@@ -150,8 +152,11 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
           price: price,
           currency: _currency,
           notes: notes,
+          keptImagePaths: [for (final photo in _keptPhotos) photo.path],
+          photos: [for (final file in _imageFiles) LocalPhoto(file.path)],
         );
         ref.invalidate(garmentProvider(widget.garmentId!));
+        ref.invalidate(outfitsProvider);
       } else {
         await store.createGarment(
           name: name,
@@ -192,6 +197,13 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
     _season = garment.season;
     _occasion = garment.occasion;
     _currency = garment.currency;
+    final count = garment.imagePaths.length < garment.imageUrls.length
+        ? garment.imagePaths.length
+        : garment.imageUrls.length;
+    _keptPhotos.addAll([
+      for (var i = 0; i < count; i++)
+        (path: garment.imagePaths[i], url: garment.imageUrls[i]),
+    ]);
   }
 
   @override
@@ -241,14 +253,12 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            if (!_editing) ...[
-              _buildImagePicker().animate().fadeIn(),
-              if (ref.read(backgroundRemovalServiceProvider).isSupported) ...[
-                const SizedBox(height: 12),
-                _buildBackgroundRemovalToggle().animate().fadeIn(delay: 50.ms),
-              ],
-              const SizedBox(height: 28),
+            _buildImagePicker().animate().fadeIn(),
+            if (ref.read(backgroundRemovalServiceProvider).isSupported) ...[
+              const SizedBox(height: 12),
+              _buildBackgroundRemovalToggle().animate().fadeIn(delay: 50.ms),
             ],
+            const SizedBox(height: 28),
             _buildBasicInfo().animate().fadeIn(delay: 100.ms),
             const SizedBox(height: 20),
             _buildCategorySection().animate().fadeIn(delay: 150.ms),
@@ -295,7 +305,8 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
   }
 
   Widget _buildImagePickerContent() {
-    if (_imageFiles.isEmpty) {
+    final photoCount = _keptPhotos.length + _imageFiles.length;
+    if (photoCount == 0) {
       return GestureDetector(
         onTap: _showImageSourceSheet,
         child: Container(
@@ -330,10 +341,10 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
       height: 220,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: _imageFiles.length + 1,
+        itemCount: photoCount + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          if (index == _imageFiles.length) {
+          if (index == photoCount) {
             return GestureDetector(
               onTap: _showImageSourceSheet,
               child: Container(
@@ -350,6 +361,8 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
               ),
             );
           }
+          final kept = index < _keptPhotos.length;
+          final fileIndex = index - _keptPhotos.length;
           return Container(
             width: 140,
             decoration: BoxDecoration(
@@ -360,14 +373,24 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.file(_imageFiles[index], fit: BoxFit.cover),
+                  if (kept)
+                    CachedNetworkImage(
+                      imageUrl: _keptPhotos[index].url,
+                      fit: BoxFit.cover,
+                    )
+                  else
+                    Image.file(_imageFiles[fileIndex], fit: BoxFit.cover),
                   Positioned(
                     top: 8,
                     right: 8,
                     child: GestureDetector(
                       onTap: () {
-                        final removed = _imageFiles[index];
-                        setState(() => _imageFiles.removeAt(index));
+                        if (kept) {
+                          setState(() => _keptPhotos.removeAt(index));
+                          return;
+                        }
+                        final removed = _imageFiles[fileIndex];
+                        setState(() => _imageFiles.removeAt(fileIndex));
                         unawaited(deleteFileQuietly(removed));
                       },
                       child: Container(

@@ -31,6 +31,8 @@ abstract interface class GarmentStore {
     double? price,
     String currency = Garment.defaultCurrency,
     String? notes,
+    List<String>? keptImagePaths,
+    List<LocalPhoto> photos = const [],
   });
 
   Future<void> deleteGarment(String id);
