@@ -28,19 +28,20 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 24),
           children: [
             _buildHeader(context),
             _buildCalendar(entriesAsync),
             const Divider(height: 1),
-            const SizedBox(height: 16),
-            Expanded(
-              child: entryAsync.when(
-                loading: () => const LoadingIndicator(),
-                error: (_, __) => const SizedBox.shrink(),
-                data: (entry) => _buildDayDetail(context, entry),
+            const SizedBox(height: 12),
+            entryAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 32),
+                child: LoadingIndicator(),
               ),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (entry) => _buildDayDetail(context, entry),
             ),
           ],
         ),
@@ -74,6 +75,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: DateTime.utc(2030, 12, 31),
       focusedDay: _focusedDay,
+      rowHeight: 40,
+      daysOfWeekHeight: 22,
       selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
       eventLoader: (day) {
         final key = DateTime(day.year, day.month, day.day);

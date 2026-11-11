@@ -30,6 +30,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get analytics => 'Analytics';
 
   @override
+  String get navAnalytics => 'Stats';
+
+  @override
   String get profile => 'Profile';
 
   @override

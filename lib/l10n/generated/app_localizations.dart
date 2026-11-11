@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'Estadísticas'**
   String get analytics;
 
+  /// No description provided for @navAnalytics.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos'**
+  String get navAnalytics;
+
   /// No description provided for @profile.
   ///
   /// In es, this message translates to:

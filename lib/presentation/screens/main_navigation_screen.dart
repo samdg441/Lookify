@@ -51,7 +51,7 @@ class MainNavigationScreen extends StatelessWidget {
       l10n.closet,
       l10n.outfits,
       l10n.calendar,
-      l10n.analytics,
+      l10n.navAnalytics,
       l10n.profile,
     ];
     return Scaffold(
@@ -65,6 +65,12 @@ class MainNavigationScreen extends StatelessWidget {
         child: BottomNavigationBar(
           currentIndex: currentIndex,
           onTap: (index) => context.go(_tabs[index].route),
+          type: BottomNavigationBarType.fixed,
+          selectedFontSize: 11,
+          unselectedFontSize: 11,
+          backgroundColor: AppColors.surface,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: AppColors.textDisabled,
           items: [
             for (var i = 0; i < _tabs.length; i++)
               BottomNavigationBarItem(

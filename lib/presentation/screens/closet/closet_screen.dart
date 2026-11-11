@@ -112,7 +112,7 @@ class ClosetScreen extends ConsumerWidget {
 
   Widget _buildGrid(BuildContext context, List<Garment> garments) {
     return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 12,

@@ -11,18 +11,20 @@ class CategoryFilter extends StatelessWidget {
     required this.selected,
     required this.onSelected,
     this.showAll = true,
+    this.showIcons = true,
   });
 
   final List<String> categories;
   final String selected;
   final ValueChanged<String> onSelected;
   final bool showAll;
+  final bool showIcons;
 
   @override
   Widget build(BuildContext context) {
     final items = showAll ? ['All', ...categories] : categories;
     return SizedBox(
-      height: 40,
+      height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -49,7 +51,7 @@ class CategoryFilter extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (cat != 'All') ...[
+                  if (showIcons && cat != 'All') ...[
                     Text(
                       categoryIcon(cat),
                       style: const TextStyle(fontSize: 13),
@@ -62,7 +64,7 @@ class CategoryFilter extends StatelessWidget {
                         : catalogLabel(AppLocalizations.of(context), cat),
                     style: TextStyle(
                       color: isSelected
-                          ? AppColors.background
+                          ? AppColors.onPrimary
                           : AppColors.textSecondary,
                       fontSize: 13,
                       fontWeight: isSelected

@@ -79,7 +79,13 @@ class OutfitCard extends StatelessWidget {
 
   Widget _buildGarmentImage(String? url) {
     if (url == null) {
-      return Container(color: AppColors.surfaceVariant);
+      return Container(
+        color: AppColors.surfaceVariant,
+        child: Center(
+          child: Icon(Icons.checkroom_outlined,
+              color: AppColors.textDisabled, size: 28),
+        ),
+      );
     }
     return CachedNetworkImage(
       imageUrl: url,

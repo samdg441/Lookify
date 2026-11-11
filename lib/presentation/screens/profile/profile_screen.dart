@@ -76,6 +76,7 @@ class ProfileScreen extends ConsumerWidget {
                 _tile(context,
                     icon: Icons.delete_outline,
                     label: l10n.deleteAccount,
+                    color: AppColors.error,
                     onTap: () => _deleteAccount(context, ref)),
               ],
             ).animate().fadeIn(delay: 100.ms),
@@ -92,7 +93,7 @@ class ProfileScreen extends ConsumerWidget {
                     '1.0.0',
                     style: TextStyle(color: AppColors.textDisabled, fontSize: 13),
                   ),
-                  onTap: () {},
+                  onTap: null,
                 ),
               ],
             ).animate().fadeIn(delay: 150.ms),
@@ -188,11 +189,17 @@ class ProfileScreen extends ConsumerWidget {
       {required IconData icon,
       required String label,
       Widget? trailing,
-      required VoidCallback onTap}) {
+      VoidCallback? onTap,
+      Color? color}) {
+    final tint = color ?? AppColors.textSecondary;
     return ListTile(
-      leading: Icon(icon, color: AppColors.textSecondary, size: 20),
-      title: Text(label, style: Theme.of(context).textTheme.bodyLarge),
-      trailing: trailing ?? Icon(Icons.chevron_right, color: AppColors.textDisabled, size: 18),
+      leading: Icon(icon, color: tint, size: 20),
+      title: Text(label,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: color)),
+      trailing: trailing ??
+          (onTap == null
+              ? null
+              : Icon(Icons.chevron_right, color: AppColors.textDisabled, size: 18)),
       onTap: onTap,
       minLeadingWidth: 20,
     );

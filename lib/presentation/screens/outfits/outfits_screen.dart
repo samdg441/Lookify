@@ -120,6 +120,7 @@ class _MySavedOutfits extends ConsumerWidget {
         CategoryFilter(
           categories: AppConstants.occasions,
           selected: selectedOccasion,
+          showIcons: false,
           onSelected: (o) =>
               ref.read(selectedOccasionProvider.notifier).state = o,
         ),
@@ -143,7 +144,7 @@ class _MySavedOutfits extends ConsumerWidget {
                     ),
                   )
                 : GridView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,

@@ -128,7 +128,7 @@ class AnalyticsScreen extends ConsumerWidget {
       required Color color}) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
@@ -146,7 +146,12 @@ class AnalyticsScreen extends ConsumerWidget {
                     fontSize: 22,
                   ),
             ),
-            Text(label, style: Theme.of(context).textTheme.labelSmall),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
           ],
         ),
       ),
@@ -156,18 +161,12 @@ class AnalyticsScreen extends ConsumerWidget {
   Widget _buildCategoryChart(BuildContext context, Map<String, int> stats) {
     final total = stats.values.fold(0, (a, b) => a + b);
     final sections = stats.entries.map((e) {
-      final pct = e.value / total;
       return PieChartSectionData(
-        value: e.value.toDouble(),
-        color: categoryColor(e.key),
-        title: pct > 0.08 ? '${(pct * 100).round()}%' : '',
-        titleStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
-        radius: 70,
-      );
+          value: e.value.toDouble(),
+          color: categoryColor(e.key),
+          title: '',
+          radius: 28,
+        );
     }).toList();
 
     return Padding(
@@ -190,14 +189,23 @@ class AnalyticsScreen extends ConsumerWidget {
             child: Row(
               children: [
                 SizedBox(
-                  height: 160,
-                  width: 160,
-                  child: PieChart(
-                    PieChartData(
-                      sections: sections,
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 32,
-                    ),
+                  height: 132,
+                  width: 132,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      PieChart(
+                        PieChartData(
+                          sections: sections,
+                          sectionsSpace: 2,
+                          centerSpaceRadius: 36,
+                        ),
+                      ),
+                      Text(
+                        '$total',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 20),
