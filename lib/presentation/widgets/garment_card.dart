@@ -69,7 +69,7 @@ class GarmentCard extends StatelessWidget {
           if (selected)
             Container(
               color: AppColors.primary.withOpacity(0.3),
-              child: const Center(
+              child: Center(
                 child: Icon(Icons.check_circle, color: AppColors.primary, size: 32),
               ),
             ),
@@ -137,7 +137,7 @@ class GarmentCard extends StatelessWidget {
                 const Spacer(),
               Row(
                 children: [
-                  const Icon(Icons.repeat, size: 12, color: AppColors.textDisabled),
+                  Icon(Icons.repeat, size: 12, color: AppColors.textDisabled),
                   const SizedBox(width: 3),
                   Text(
                     '${garment.wearCount}',

@@ -71,6 +71,51 @@ class FirebaseAuthGateway implements AuthGateway {
   }
 
   @override
+  Future<void> updateDisplayName(String fullName) async {
+    final user = _auth.currentUser;
+    if (user == null) throw const AuthFailure('signInRequired');
+    final name = fullName.trim();
+    try {
+      await user.updateDisplayName(name);
+      await _db
+          .collection('users')
+          .doc(user.uid)
+          .set({'fullName': name}, SetOptions(merge: true));
+      await user.reload();
+      // Re-emit so listeners of userChanges() pick up the new name.
+      await _auth.currentUser?.getIdToken(true);
+    } on FirebaseAuthException catch (error) {
+      throw AuthFailure(_message(error));
+    } on FirebaseException {
+      throw const AuthFailure('profileSaveFailed');
+    }
+  }
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) {
+      throw const AuthFailure('signInRequired');
+    }
+    try {
+      await user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: email, password: currentPassword),
+      );
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (error) {
+      if (error.code == 'wrong-password' ||
+          error.code == 'invalid-credential') {
+        throw const AuthFailure('currentPasswordIncorrect');
+      }
+      throw AuthFailure(_message(error));
+    }
+  }
+
+  @override
   Future<void> signOut() => _auth.signOut();
 
   @override

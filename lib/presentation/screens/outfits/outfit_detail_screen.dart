@@ -183,7 +183,7 @@ class OutfitDetailScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.delete, style: const TextStyle(color: AppColors.error)),
+            child: Text(l10n.delete, style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),

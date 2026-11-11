@@ -131,7 +131,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: AppLocalizations.of(context).password,
-                    prefixIcon: const Icon(Icons.lock_outline,
+                    prefixIcon: Icon(Icons.lock_outline,
                         color: AppColors.textDisabled),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -152,12 +152,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: ElevatedButton(
                     onPressed: _loading ? null : _register,
                     child: _loading
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppColors.background,
+                              color: AppColors.onPrimary,
                             ),
                           )
                         : Text(AppLocalizations.of(context).createAccount),

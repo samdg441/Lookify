@@ -323,7 +323,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.notes, color: AppColors.textDisabled, size: 18),
+          Icon(Icons.notes, color: AppColors.textDisabled, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Text(notes, style: Theme.of(context).textTheme.bodyMedium),
@@ -378,7 +378,7 @@ class _GarmentDetailScreenState extends ConsumerState<GarmentDetailScreen> {
               if (context.mounted) context.pop();
             },
             child: Text(l10n.delete,
-                style: const TextStyle(color: AppColors.error)),
+                style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),

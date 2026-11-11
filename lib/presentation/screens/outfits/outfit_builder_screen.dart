@@ -89,7 +89,7 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
             data: (garments) => TextButton(
               onPressed: _saving ? null : () => _save(garments),
               child: _saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
@@ -241,7 +241,7 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down,
+            Icon(Icons.keyboard_arrow_down,
                 size: 16, color: AppColors.textDisabled),
           ],
         ),
@@ -271,7 +271,7 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
                   padding: const EdgeInsets.only(right: 8),
                   child: Text(
                     selected[i].name.split(' ').first,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: AppColors.primary,
                         fontSize: 12,
                         fontWeight: FontWeight.w500),
@@ -282,7 +282,7 @@ class _OutfitBuilderScreenState extends ConsumerState<OutfitBuilderScreen> {
           ),
           Text(
             AppLocalizations.of(context).selectedCount(selected.length),
-            style: const TextStyle(
+            style: TextStyle(
                 color: AppColors.primary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600),

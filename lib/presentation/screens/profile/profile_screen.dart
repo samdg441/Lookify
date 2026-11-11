@@ -6,7 +6,6 @@ import '../../providers/locale_controller.dart';
 import '../../providers/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/auth/auth_session.dart';
-import '../../../domain/auth/credential_rules.dart';
 import '../../../l10n/catalog_labels.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -19,6 +18,7 @@ class ProfileScreen extends ConsumerWidget {
 
     final l10n = AppLocalizations.of(context);
     final locale = ref.watch(localeProvider);
+    final isDark = ref.watch(isDarkModeProvider);
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -36,12 +36,27 @@ class ProfileScreen extends ConsumerWidget {
                   label: l10n.language,
                   trailing: Text(
                     locale.languageCode == 'en' ? l10n.english : l10n.spanish,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textDisabled,
                       fontSize: 13,
                     ),
                   ),
                   onTap: () => _chooseLanguage(context, ref),
+                ),
+                SwitchListTile(
+                  secondary: Icon(
+                    isDark
+                        ? Icons.dark_mode_outlined
+                        : Icons.light_mode_outlined,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
+                  title: Text(l10n.darkMode,
+                      style: Theme.of(context).textTheme.bodyLarge),
+                  value: isDark,
+                  activeThumbColor: AppColors.primary,
+                  onChanged: (value) =>
+                      ref.read(isDarkModeProvider.notifier).setDark(value),
                 ),
               ],
             ).animate().fadeIn(delay: 50.ms),
@@ -52,8 +67,8 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 _tile(context,
                     icon: Icons.person_outline,
-                    label: l10n.editName,
-                    onTap: () => _editName(context, ref, user)),
+                    label: l10n.editProfile,
+                    onTap: () => context.push('/profile/edit')),
                 _tile(context,
                     icon: Icons.lock_reset,
                     label: l10n.resetPassword,
@@ -73,7 +88,7 @@ class ProfileScreen extends ConsumerWidget {
                   context,
                   icon: Icons.info_outline,
                   label: l10n.appVersion,
-                  trailing: const Text(
+                  trailing: Text(
                     '1.0.0',
                     style: TextStyle(color: AppColors.textDisabled, fontSize: 13),
                   ),
@@ -83,11 +98,11 @@ class ProfileScreen extends ConsumerWidget {
             ).animate().fadeIn(delay: 150.ms),
             const SizedBox(height: 32),
             OutlinedButton.icon(
-              icon: const Icon(Icons.logout, color: AppColors.error),
+              icon: Icon(Icons.logout, color: AppColors.error),
               label: Text(l10n.signOut,
-                  style: const TextStyle(color: AppColors.error)),
+                  style: TextStyle(color: AppColors.error)),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.error),
+                side: BorderSide(color: AppColors.error),
               ),
               onPressed: () => _confirmSignOut(context, ref),
             ).animate().fadeIn(delay: 250.ms),
@@ -124,7 +139,7 @@ class ProfileScreen extends ConsumerWidget {
           child: Center(
             child: Text(
               initials.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.primary,
                 fontSize: 26,
                 fontWeight: FontWeight.w600,
@@ -160,7 +175,7 @@ class ProfileScreen extends ConsumerWidget {
           color: AppColors.card,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: AppColors.border, width: 0.5),
+            side: BorderSide(color: AppColors.border, width: 0.5),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(children: children),
@@ -177,7 +192,7 @@ class ProfileScreen extends ConsumerWidget {
     return ListTile(
       leading: Icon(icon, color: AppColors.textSecondary, size: 20),
       title: Text(label, style: Theme.of(context).textTheme.bodyLarge),
-      trailing: trailing ?? const Icon(Icons.chevron_right, color: AppColors.textDisabled, size: 18),
+      trailing: trailing ?? Icon(Icons.chevron_right, color: AppColors.textDisabled, size: 18),
       onTap: onTap,
       minLeadingWidth: 20,
     );
@@ -207,67 +222,6 @@ class ProfileScreen extends ConsumerWidget {
     );
     if (selected != null) {
       await ref.read(localeProvider.notifier).setLocale(selected);
-    }
-  }
-
-  Future<void> _editName(
-    BuildContext context,
-    WidgetRef ref,
-    AuthSession? user,
-  ) async {
-    final controller = TextEditingController(text: user?.displayName ?? '');
-    final l10n = AppLocalizations.of(context);
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(l10n.editName),
-        content: TextField(
-          controller: controller,
-          textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(labelText: l10n.fullName),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.save),
-          ),
-        ],
-      ),
-    );
-    final name = controller.text.trim();
-    controller.dispose();
-    if (saved != true || !context.mounted) return;
-    final error = CredentialRules.fullName(name);
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(localizeError(AppLocalizations.of(context), error)),
-        ),
-      );
-      return;
-    }
-    try {
-      await ref.read(authGatewayProvider).updateProfile(fullName: name);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).nameUpdated)),
-        );
-      }
-    } on AuthFailure catch (failure) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              localizeError(AppLocalizations.of(context), failure.message),
-            ),
-          ),
-        );
-      }
     }
   }
 
@@ -324,7 +278,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.delete, style: const TextStyle(color: AppColors.error)),
+            child: Text(l10n.delete, style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -368,7 +322,7 @@ class ProfileScreen extends ConsumerWidget {
               if (context.mounted) context.go('/login');
             },
             child: Text(l10n.signOut,
-                style: const TextStyle(color: AppColors.error)),
+                style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),

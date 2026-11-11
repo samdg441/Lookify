@@ -57,7 +57,7 @@ class MainNavigationScreen extends StatelessWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(
             top: BorderSide(color: AppColors.border, width: 0.5),
           ),

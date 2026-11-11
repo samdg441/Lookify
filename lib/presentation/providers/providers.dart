@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/theme/app_colors.dart';
 
 import '../../data/datasources/background_removal_service.dart';
 import '../../data/datasources/model_install_service.dart';
@@ -26,6 +28,31 @@ import '../../domain/styling/outfit_suggestion.dart';
 import '../../domain/styling/outfit_suggester.dart';
 
 export '../../domain/styling/outfit_suggestion.dart' show SuggestionRequest;
+
+final sharedPreferencesProvider = Provider<SharedPreferences>(
+  (ref) => throw UnimplementedError('Override in main()'),
+);
+
+const _themeKey = 'dark_mode';
+
+/// `true` = dark (default), `false` = light. Persisted on the device.
+class ThemeModeNotifier extends StateNotifier<bool> {
+  ThemeModeNotifier(this._prefs) : super(_prefs.getBool(_themeKey) ?? true) {
+    AppColors.isDark = state;
+  }
+
+  final SharedPreferences _prefs;
+
+  Future<void> setDark(bool value) async {
+    AppColors.isDark = value;
+    state = value;
+    await _prefs.setBool(_themeKey, value);
+  }
+}
+
+final isDarkModeProvider = StateNotifierProvider<ThemeModeNotifier, bool>(
+  (ref) => ThemeModeNotifier(ref.watch(sharedPreferencesProvider)),
+);
 
 final crashReporterProvider = Provider<CrashReporter>(
   (ref) => createCrashReporter(),

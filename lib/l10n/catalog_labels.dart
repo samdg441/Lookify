@@ -69,6 +69,7 @@ String localizeError(AppLocalizations l10n, String code) {
     'profileSaveFailed' => l10n.profileSaveFailed,
     'signInRequired' => l10n.signInRequired,
     'accountDeleteFailed' => l10n.accountDeleteFailed,
+    'currentPasswordIncorrect' => l10n.currentPasswordIncorrect,
     _ => l10n.signInFailed,
   };
 }

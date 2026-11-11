@@ -44,7 +44,7 @@ Future<void> showOptionSheet({
                 catalogLabel(AppLocalizations.of(sheetContext), option),
               ),
               trailing: selected == option
-                  ? const Icon(Icons.check, color: AppColors.primary)
+                  ? Icon(Icons.check, color: AppColors.primary)
                   : null,
               onTap: () {
                 onChanged(selected == option ? null : option);

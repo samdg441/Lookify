@@ -90,7 +90,7 @@ class _OutfitsScreenState extends ConsumerState<OutfitsScreen>
             borderRadius: BorderRadius.circular(10),
           ),
           indicatorSize: TabBarIndicatorSize.tab,
-          labelColor: AppColors.background,
+          labelColor: AppColors.onPrimary,
           unselectedLabelColor: AppColors.textSecondary,
           labelStyle: const TextStyle(
             fontWeight: FontWeight.w600,

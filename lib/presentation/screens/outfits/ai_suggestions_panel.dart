@@ -40,7 +40,7 @@ class _AiSuggestionsPanelState extends ConsumerState<AiSuggestionsPanel> {
             loading: () => Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CircularProgressIndicator(color: AppColors.primary),
+                CircularProgressIndicator(color: AppColors.primary),
                 const SizedBox(height: 16),
                 Text(
                   AppLocalizations.of(context).curating,

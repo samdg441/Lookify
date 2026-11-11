@@ -358,6 +358,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editName => 'Edit name';
 
   @override
+  String get editProfile => 'Edit profile';
+
+  @override
+  String get darkMode => 'Dark mode';
+
+  @override
+  String get currentPassword => 'Current password';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get confirmPassword => 'Confirm new password';
+
+  @override
+  String get saveName => 'Save name';
+
+  @override
+  String get changePassword => 'Change password';
+
+  @override
+  String get passwordUpdated => 'Password updated';
+
+  @override
+  String get currentPasswordRequired => 'Enter your current password';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get couldNotUpdateName => 'Could not update your name';
+
+  @override
+  String get couldNotUpdatePassword => 'Could not update your password';
+
+  @override
+  String get currentPasswordIncorrect => 'Current password is incorrect';
+
+  @override
   String get resetPassword => 'Reset password';
 
   @override

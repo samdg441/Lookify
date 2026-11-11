@@ -710,6 +710,84 @@ abstract class AppLocalizations {
   /// **'Editar nombre'**
   String get editName;
 
+  /// No description provided for @editProfile.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar perfil'**
+  String get editProfile;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo oscuro'**
+  String get darkMode;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña actual'**
+  String get currentPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva contraseña'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar contraseña'**
+  String get confirmPassword;
+
+  /// No description provided for @saveName.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar nombre'**
+  String get saveName;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar contraseña'**
+  String get changePassword;
+
+  /// No description provided for @passwordUpdated.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña actualizada'**
+  String get passwordUpdated;
+
+  /// No description provided for @currentPasswordRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe tu contraseña actual'**
+  String get currentPasswordRequired;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In es, this message translates to:
+  /// **'Las contraseñas no coinciden'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @couldNotUpdateName.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo actualizar tu nombre'**
+  String get couldNotUpdateName;
+
+  /// No description provided for @couldNotUpdatePassword.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo actualizar tu contraseña'**
+  String get couldNotUpdatePassword;
+
+  /// No description provided for @currentPasswordIncorrect.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña actual no es correcta'**
+  String get currentPasswordIncorrect;
+
   /// No description provided for @resetPassword.
   ///
   /// In es, this message translates to:

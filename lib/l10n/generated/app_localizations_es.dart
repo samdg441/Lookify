@@ -358,6 +358,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get editName => 'Editar nombre';
 
   @override
+  String get editProfile => 'Editar perfil';
+
+  @override
+  String get darkMode => 'Modo oscuro';
+
+  @override
+  String get currentPassword => 'Contraseña actual';
+
+  @override
+  String get newPassword => 'Nueva contraseña';
+
+  @override
+  String get confirmPassword => 'Confirmar contraseña';
+
+  @override
+  String get saveName => 'Guardar nombre';
+
+  @override
+  String get changePassword => 'Cambiar contraseña';
+
+  @override
+  String get passwordUpdated => 'Contraseña actualizada';
+
+  @override
+  String get currentPasswordRequired => 'Escribe tu contraseña actual';
+
+  @override
+  String get passwordsDoNotMatch => 'Las contraseñas no coinciden';
+
+  @override
+  String get couldNotUpdateName => 'No se pudo actualizar tu nombre';
+
+  @override
+  String get couldNotUpdatePassword => 'No se pudo actualizar tu contraseña';
+
+  @override
+  String get currentPasswordIncorrect => 'La contraseña actual no es correcta';
+
+  @override
   String get resetPassword => 'Restablecer contraseña';
 
   @override

@@ -152,7 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             color: AppColors.primary.withOpacity(0.12),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(Icons.checkroom_outlined,
+          child: Icon(Icons.checkroom_outlined,
               color: AppColors.primary, size: 28),
         ).animate().fadeIn().scale(begin: const Offset(0.8, 0.8)),
         const SizedBox(height: 24),
@@ -188,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           decoration: InputDecoration(
             labelText: AppLocalizations.of(context).password,
             prefixIcon:
-                const Icon(Icons.lock_outline, color: AppColors.textDisabled),
+                Icon(Icons.lock_outline, color: AppColors.textDisabled),
             suffixIcon: IconButton(
               icon: Icon(
                 _obscurePassword
@@ -212,12 +212,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: ElevatedButton(
         onPressed: _loading ? null : _signIn,
         child: _loading
-            ? const SizedBox(
+            ? SizedBox(
                 height: 20,
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: AppColors.background,
+                  color: AppColors.onPrimary,
                 ),
               )
             : Text(AppLocalizations.of(context).signIn),
