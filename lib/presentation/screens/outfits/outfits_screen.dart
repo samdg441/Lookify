@@ -186,7 +186,7 @@ class _AiSuggestionsState extends ConsumerState<_AiSuggestions> {
             loading: () => Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CircularProgressIndicator(color: AppColors.primary),
+                CircularProgressIndicator(color: AppColors.primary),
                 const SizedBox(height: 16),
                 Text(
                   'Curating your perfect outfits…',
@@ -257,7 +257,7 @@ class _AiSuggestionsState extends ConsumerState<_AiSuggestions> {
                   color: AppColors.error.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
+                child: Text(
                   'Clear',
                   style: TextStyle(color: AppColors.error, fontSize: 13),
                 ),
@@ -342,7 +342,7 @@ class _AiSuggestionsState extends ConsumerState<_AiSuggestions> {
             ...options.map((o) => ListTile(
                   title: Text(o),
                   trailing: selected == o
-                      ? const Icon(Icons.check, color: AppColors.primary)
+                      ? Icon(Icons.check, color: AppColors.primary)
                       : null,
                   onTap: () {
                     onChanged(selected == o ? null : o);

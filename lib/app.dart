@@ -19,6 +19,7 @@ import 'presentation/screens/outfits/outfit_builder_screen.dart';
 import 'presentation/screens/calendar/calendar_screen.dart';
 import 'presentation/screens/analytics/analytics_screen.dart';
 import 'presentation/screens/profile/profile_screen.dart';
+import 'presentation/screens/profile/edit_profile_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -128,6 +129,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (_, __) => const NoTransitionPage(
               child: ProfileScreen(),
             ),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (_, __) => const EditProfileScreen(),
+              ),
+            ],
           ),
         ],
       ),
@@ -147,13 +155,17 @@ class VirtualClosetApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final isDark = ref.watch(isDarkModeProvider);
     ref.listen(authStateProvider, (_, next) {
       ref.read(crashReporterProvider).setUser(next.asData?.value?.id);
     });
 
     return MaterialApp.router(
       title: 'Virtual Closet',
-      theme: AppTheme.dark,
+      // AppColors.isDark is already updated by the notifier at this point.
+      key: ValueKey(isDark),
+      theme: isDark ? AppTheme.dark : AppTheme.light,
+      themeAnimationDuration: Duration.zero,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

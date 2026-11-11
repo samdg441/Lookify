@@ -160,7 +160,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
           TextButton(
             onPressed: _saving ? null : _save,
             child: _saving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
@@ -212,7 +212,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
                 color: AppColors.background.withOpacity(0.6),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -242,7 +242,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.add_photo_alternate_outlined,
+              Icon(Icons.add_photo_alternate_outlined,
                   color: AppColors.textDisabled, size: 40),
               const SizedBox(height: 12),
               Text(
@@ -277,7 +277,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.border, width: 1),
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(Icons.add_photo_alternate_outlined,
                       color: AppColors.textDisabled, size: 32),
                 ),
@@ -306,7 +306,7 @@ class _AddGarmentScreenState extends ConsumerState<AddGarmentScreen> {
                       },
                       child: Container(
                         padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.background,
                           shape: BoxShape.circle,
                         ),

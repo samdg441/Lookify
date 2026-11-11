@@ -12,6 +12,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final isDark = ref.watch(isDarkModeProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -27,7 +28,7 @@ class ProfileScreen extends ConsumerWidget {
                 _tile(context,
                     icon: Icons.person_outline,
                     label: 'Edit Profile',
-                    onTap: () {}),
+                    onTap: () => context.push('/profile/edit')),
                 _tile(context,
                     icon: Icons.notifications_outlined,
                     label: 'Notifications',
@@ -39,6 +40,18 @@ class ProfileScreen extends ConsumerWidget {
               context,
               title: 'Preferences',
               children: [
+                SwitchListTile(
+                  secondary: Icon(
+                      isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                      color: AppColors.textSecondary,
+                      size: 20),
+                  title: Text('Dark mode',
+                      style: Theme.of(context).textTheme.bodyLarge),
+                  value: isDark,
+                  activeColor: AppColors.primary,
+                  onChanged: (v) =>
+                      ref.read(isDarkModeProvider.notifier).setDark(v),
+                ),
                 _tile(context,
                     icon: Icons.palette_outlined,
                     label: 'Style Profile',
@@ -65,7 +78,7 @@ class ProfileScreen extends ConsumerWidget {
                 _tile(context,
                     icon: Icons.info_outline,
                     label: 'App Version',
-                    trailing: const Text('1.0.0',
+                    trailing: Text('1.0.0',
                         style: TextStyle(
                             color: AppColors.textDisabled, fontSize: 13)),
                     onTap: () {}),
@@ -73,11 +86,11 @@ class ProfileScreen extends ConsumerWidget {
             ).animate().fadeIn(delay: 200.ms),
             const SizedBox(height: 32),
             OutlinedButton.icon(
-              icon: const Icon(Icons.logout, color: AppColors.error),
-              label: const Text('Sign Out',
+              icon: Icon(Icons.logout, color: AppColors.error),
+              label: Text('Sign Out',
                   style: TextStyle(color: AppColors.error)),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.error),
+                side: BorderSide(color: AppColors.error),
               ),
               onPressed: () => _confirmSignOut(context, ref),
             ).animate().fadeIn(delay: 250.ms),
@@ -106,7 +119,7 @@ class ProfileScreen extends ConsumerWidget {
           child: Center(
             child: Text(
               initials.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.primary,
                 fontSize: 26,
                 fontWeight: FontWeight.w600,
@@ -158,7 +171,7 @@ class ProfileScreen extends ConsumerWidget {
     return ListTile(
       leading: Icon(icon, color: AppColors.textSecondary, size: 20),
       title: Text(label, style: Theme.of(context).textTheme.bodyLarge),
-      trailing: trailing ?? const Icon(Icons.chevron_right, color: AppColors.textDisabled, size: 18),
+      trailing: trailing ?? Icon(Icons.chevron_right, color: AppColors.textDisabled, size: 18),
       onTap: onTap,
       minLeadingWidth: 20,
     );
@@ -182,7 +195,7 @@ class ProfileScreen extends ConsumerWidget {
               await ref.read(authGatewayProvider).signOut();
               if (context.mounted) context.go('/login');
             },
-            child: const Text('Sign Out',
+            child: Text('Sign Out',
                 style: TextStyle(color: AppColors.error)),
           ),
         ],

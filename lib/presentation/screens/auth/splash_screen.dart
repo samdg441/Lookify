@@ -76,7 +76,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   width: 1,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.checkroom_outlined,
                 color: AppColors.primary,
                 size: 44,

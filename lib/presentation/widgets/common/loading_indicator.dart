@@ -7,7 +7,7 @@ class LoadingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: CircularProgressIndicator(color: AppColors.primary),
     );
   }
@@ -54,7 +54,7 @@ class ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
+            Icon(Icons.error_outline,
                 color: AppColors.error, size: 48),
             const SizedBox(height: 16),
             Text(
