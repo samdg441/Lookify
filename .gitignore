@@ -52,3 +52,9 @@ Pods/
 *.njsproj
 *.sln
 *.sw?
+
+# FVM Version Cache
+.fvm/
+
+# Cloud Functions
+functions/node_modules/

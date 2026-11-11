@@ -13,6 +13,7 @@ analyzer:
     invalid_annotation_target: ignore
   exclude:
     - build/**
+    - Lookify/**
     - android/**
     - ios/**
     - web/**
